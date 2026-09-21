@@ -15,17 +15,18 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStatusBar,
     QToolBar,
-    QVBoxLayout,
+    QHBoxLayout,
     QWidget,
 )
 from widgets import CustomTextEdit
+from pdfWidget import PdfWidget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
         self.editor = CustomTextEdit()
         # Setup the QTextEdit editor configuration
         self.editor.selectionChanged.connect(self.update_format)
@@ -179,6 +180,29 @@ class MainWindow(QMainWindow):
 
         self.fontsize = QComboBox()
         self.fontsize.addItems([str(s) for s in constants.FONT_SIZES])
+
+
+
+
+#
+        self.pdfViewer = PdfWidget()
+        self.pdfViewer.selectionChanged.connect(self.update_format)
+        layout.addWidget(self.pdfViewer)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # Connect to the signal producing the text of the current selection. Convert the string to float
         # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
@@ -420,7 +444,7 @@ class MainWindow(QMainWindow):
 
     def update_title(self):
         self.setWindowTitle(
-            "%s - Megasolid Idiom"
+            "%s - DigiHand"
             % (os.path.basename(self.path) if self.path else "Untitled")
         )
 
@@ -430,7 +454,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setApplicationName("Megasolid Idiom")
+    app.setApplicationName("DigiHand v0.1")
 
     window = MainWindow()
     app.exec()
