@@ -411,7 +411,7 @@ class MainWindow(QMainWindow):
             return
 
         self.pdfViewer.setDocument(self.pdf_doc)
-        # self.pdf_view.setPageMode(QPdfView.PageMode.MultiPage)
+        # self.pdfViewer.setPageMode(QPdfView.PageMode.MultiPage)
         self.pdfViewer.setPageMode(QPdfView.PageMode.SinglePage)
 
         # jump to first page
