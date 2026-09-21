@@ -5,7 +5,7 @@ from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 
 
-class PdfWidget(QPdfView):
+class PdfView(QPdfView):
     def __init__(self):
         super().__init__()
         # self.setAutoFormatting(QPdfView.AutoFormattingFlag.AutoAll)

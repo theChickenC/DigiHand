@@ -3,17 +3,53 @@ import utils
 from PySide6.QtGui import QFont, QImage, QTextDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
+from pdfController import PdfController
+from pdfView import PdfView
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QFontComboBox,
+    QMainWindow,
+    QMessageBox,
+    QStatusBar,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
+
+class PdfWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.setSpacing(0)
+
+        self.pdfController = PdfController()
+        self.pdfView = PdfView()
+        # self.pdfViewer.selectionChanged.connect(self.update_format)
+        self.layout.addWidget(self.pdfController)
+        self.layout.addWidget(self.pdfView)
+
+        self.pdf_doc = QPdfDocument()
 
 
-class PdfWidget(QPdfView):
-    def __init__(self):
-        super().__init__()
-        # self.setAutoFormatting(QPdfView.AutoFormattingFlag.AutoAll)
-        # Initialize default font size.
-        font = QFont("Times", 12)
-        self.setFont(font)
-        # We need to repeat the size to init the current format.
-        # self.setFontPointSize(12)
+    def setFile(self, path):
+        load_result = self.pdf_doc.load(path)
+        if load_result != QPdfDocument.Error.None_:
+            self.statusBar().showMessage(f"Failed to load PDF: {load_result}")
+            return
+        
+        self.pdfView.setDocument(self.pdf_doc)
+        # self.pdfView.setPageMode(QPdfView.PageMode.MultiPage)
+        # self.pdfView.setPageMode(QPdfView.PageMode.SinglePage)
+
+        # jump to first page
+        nav = self.pdfView.pageNavigator()
+        nav.jumpToPage(0)
+
+
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():

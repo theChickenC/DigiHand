@@ -3,17 +3,33 @@ import utils
 from PySide6.QtGui import QFont, QImage, QTextDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
+from pdfView import PdfView
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QFontComboBox,
+    QMainWindow,
+    QMessageBox,
+    QStatusBar,
+    QToolBar,
+    QVBoxLayout,
+    QHBoxLayout,
+    QWidget,
+    QPushButton,
+)
 
 
-class PdfWidget(QPdfView):
+class PdfController(QWidget):
     def __init__(self):
         super().__init__()
-        # self.setAutoFormatting(QPdfView.AutoFormattingFlag.AutoAll)
-        # Initialize default font size.
-        font = QFont("Times", 12)
-        self.setFont(font)
-        # We need to repeat the size to init the current format.
-        # self.setFontPointSize(12)
+
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.setSpacing(0)
+        self.dummyButton = QPushButton("Dummy Button")
+        self.layout.addWidget(self.dummyButton)
+        
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():

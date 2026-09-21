@@ -29,12 +29,15 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        layout = QHBoxLayout()
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.main_layout = QHBoxLayout(self.central_widget)
+        self.central_widget.setLayout(self.main_layout)
 
         # PDF View
-        self.pdfViewer = PdfWidget()
+        self.pdfWidget = PdfWidget()
         # self.pdfViewer.selectionChanged.connect(self.update_format)
-        layout.addWidget(self.pdfViewer)
+        self.main_layout.addWidget(self.pdfWidget)
 
 
 
@@ -48,11 +51,8 @@ class MainWindow(QMainWindow):
         self.path = None
         self.pdf_doc = None
         
-        layout.addWidget(self.editor)
+        self.main_layout.addWidget(self.editor)
 
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
 
         self.status = QStatusBar()
         self.setStatusBar(self.status)
@@ -402,21 +402,7 @@ class MainWindow(QMainWindow):
         if not path:
             return
 
-        self.pdf_doc = QPdfDocument()
-        load_result = self.pdf_doc.load(path)
-
-        # Fix: use QPdfDocument.Error.None
-        if load_result != QPdfDocument.Error.None_:
-            self.statusBar().showMessage(f"Failed to load PDF: {load_result}")
-            return
-
-        self.pdfViewer.setDocument(self.pdf_doc)
-        # self.pdfViewer.setPageMode(QPdfView.PageMode.MultiPage)
-        self.pdfViewer.setPageMode(QPdfView.PageMode.SinglePage)
-
-        # jump to first page
-        nav = self.pdfViewer.pageNavigator()
-        nav.jumpToPage(0)
+        self.pdfWidget.setFile(path)
 
         self.statusBar().showMessage(f"PDF loaded: {path}")
 
