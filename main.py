@@ -18,6 +18,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QWidget,
 )
+from PySide6.QtPdfWidgets import QPdfView
+from PySide6.QtPdf import QPdfDocument
+
 from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 
@@ -27,14 +30,24 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         layout = QHBoxLayout()
+
+        # PDF View
+        self.pdfViewer = PdfWidget()
+        # self.pdfViewer.selectionChanged.connect(self.update_format)
+        layout.addWidget(self.pdfViewer)
+
+
+
+        # Doc View
         self.editor = CustomTextEdit()
         # Setup the QTextEdit editor configuration
         self.editor.selectionChanged.connect(self.update_format)
-
+        
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
         self.path = None
-
+        self.pdf_doc = None
+        
         layout.addWidget(self.editor)
 
         container = QWidget()
@@ -51,6 +64,17 @@ class MainWindow(QMainWindow):
         file_toolbar.setIconSize(QSize(14, 14))
         self.addToolBar(file_toolbar)
         file_menu = self.menuBar().addMenu("&File")
+
+        open_file_source_action = QAction(
+            QIcon(os.path.join("images", "open_file_source.jpg")),
+            "Open source file...",
+            self,
+        )
+        open_file_source_action.setStatusTip("Open source file")
+        open_file_source_action.triggered.connect(self.file_open_source)
+        file_menu.addAction(open_file_source_action)
+        file_toolbar.addAction(open_file_source_action)
+
 
         open_file_action = QAction(
             QIcon(os.path.join("images", "blue-folder-open-document.png")),
@@ -185,9 +209,7 @@ class MainWindow(QMainWindow):
 
 
 #
-        self.pdfViewer = PdfWidget()
-        self.pdfViewer.selectionChanged.connect(self.update_format)
-        layout.addWidget(self.pdfViewer)
+
 
 
 
@@ -369,6 +391,36 @@ class MainWindow(QMainWindow):
         dlg.setIcon(QMessageBox.Icon.Critical)
         dlg.show()
 
+    def file_open_source(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open PDF or JPG file",
+            "",
+            "PDF Files (*.pdf);;All Files (*)",
+        )
+
+        if not path:
+            return
+
+        self.pdf_doc = QPdfDocument()
+        load_result = self.pdf_doc.load(path)
+
+        # Fix: use QPdfDocument.Error.None
+        if load_result != QPdfDocument.Error.None_:
+            self.statusBar().showMessage(f"Failed to load PDF: {load_result}")
+            return
+
+        self.pdfViewer.setDocument(self.pdf_doc)
+        # self.pdf_view.setPageMode(QPdfView.PageMode.MultiPage)
+        self.pdfViewer.setPageMode(QPdfView.PageMode.SinglePage)
+
+        # jump to first page
+        nav = self.pdfViewer.pageNavigator()
+        nav.jumpToPage(0)
+
+        self.statusBar().showMessage(f"PDF loaded: {path}")
+
+
     def file_open(self):
         path, _ = QFileDialog.getOpenFileName(
             self,
@@ -389,6 +441,7 @@ class MainWindow(QMainWindow):
             # Qt will automatically try and guess the format as txt/html
             self.editor.setText(text)
             self.update_title()
+    
 
     def file_save(self):
         if self.path is None:
