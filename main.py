@@ -37,6 +37,8 @@ from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
 from solverFlorence import SolverFlorence
+from solverQwen import SolverQwen
+from solverMoonbeam import SolverMoonbeam
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -277,11 +279,17 @@ class MainWindow(QMainWindow):
         )
 
     def solve(self):
-        sf = SolverFlorence()
         inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
         outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2"
-        output = sf.run(inputPath, outputPath)
-        print(output)
+        # sf = SolverFlorence()
+        # output = sf.run(inputPath, outputPath)
+        # print(output)
+
+        sq = SolverQwen()
+        sm = SolverMoonbeam()
+
+        output = sq.run(inputPath, outputPath)
+        # output = sm.run(inputPath, outputPath)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

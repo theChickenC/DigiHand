@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from PIL import Image
-# import torch
 from solverBase import SolverBase
 
 class SolverFlorence(SolverBase):
@@ -13,10 +12,10 @@ class SolverFlorence(SolverBase):
         from transformers import AutoProcessor, AutoModelForCausalLM 
         model = AutoModelForCausalLM.from_pretrained(
             "microsoft/Florence-2-large",
-            torch_dtype=torch_dtype,
+            torch_dtype= self.torch_dtype,
             trust_remote_code=True,
             revision="main"  # or a specific commit hash for reproducibility
-        ).to(device)
+        ).to(self.device)
 
         processor = AutoProcessor.from_pretrained(
             "microsoft/Florence-2-large",
@@ -52,10 +51,11 @@ class SolverFlorence(SolverBase):
 
 
     def run(self, image_path: str = None, output: str = None):
+        import torch
         print(f"Running {self.model_name} | input: {image_path}, output: {output}")
-        # device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        # torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        # print(f"Using device: {device} with dtype: {torch_dtype}")
+        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        print(f"Using device: {self.device} with dtype: {self.torch_dtype}")
 
 
         folder = Path(image_path)
