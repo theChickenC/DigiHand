@@ -285,11 +285,11 @@ class MainWindow(QMainWindow):
         # output = sf.run(inputPath, outputPath)
         # print(output)
 
-        sq = SolverQwen()
+        # sq = SolverQwen()
         sm = SolverMoonbeam()
 
-        output = sq.run(inputPath, outputPath)
-        # output = sm.run(inputPath, outputPath)
+        # output = sq.run(inputPath, outputPath)
+        output = sm.run(inputPath, outputPath)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

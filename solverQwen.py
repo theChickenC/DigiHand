@@ -2,7 +2,7 @@ import pymupdf
 from pathlib import Path
 from PIL import Image
 from solverBase import SolverBase
-import fitz  #for pdf input
+import pymupdf # only needed for PDF input
 
 MODEL_ID = "Qwen/Qwen2.5-VL-3B-Instruct"
 OCR_PROMPT = (
@@ -82,6 +82,17 @@ class SolverQwen(SolverBase):
 
     # wait this is good (multipage pdf to single page)
     # def pdf_to_images(self, pdf_path: Path, dpi: int = 300):
+    #     doc = fitz.open(pdf_path)
+    #     zoom = dpi / 72  # PDF default is 72 dpi
+    #     matrix = fitz.Matrix(zoom, zoom)
+    #     for i, page in enumerate(doc):
+    #         pix = page.get_pixmap(matrix=matrix)
+    #         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    #         yield i, img
+    #     doc.close()
+
+    # def pdf_to_images(pdf_path: Path, dpi: int = 300):
+    #     """Yield (page_index, PIL.Image) for each page of a PDF, rendered at dpi."""
     #     doc = fitz.open(pdf_path)
     #     zoom = dpi / 72  # PDF default is 72 dpi
     #     matrix = fitz.Matrix(zoom, zoom)
