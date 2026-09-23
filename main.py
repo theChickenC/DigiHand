@@ -62,8 +62,6 @@ class MainWindow(QMainWindow):
         splitter.setSizes([600, 600]) 
         self.setCentralWidget(splitter)
 
-
-        self.pdf_doc = None
         self.path = None
 
         # # Doc View
@@ -74,7 +72,6 @@ class MainWindow(QMainWindow):
         # # self.path holds the path of the currently open file.
         # # If none, we haven't got a file open yet (or creating new).
         # self.path = None
-        # self.pdf_doc = None
         
         # self.main_layout.addWidget(self.editor)
 
@@ -155,6 +152,8 @@ class MainWindow(QMainWindow):
         self.update_title()
         self.show()
 
+
+    
     def restore_window_state(self):
         geometry = self.settings.value("MainWindow/geometry")
         if geometry:

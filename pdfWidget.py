@@ -2,6 +2,7 @@ import constants
 import utils
 from PySide6.QtGui import QFont, QImage, QTextDocument
 from PySide6.QtPdfWidgets import QPdfView
+from PySide6.QtCore import QPointF
 from PySide6.QtPdf import QPdfDocument
 from pdfController import PdfController
 from pdfView import PdfView
@@ -26,33 +27,13 @@ class PdfWidget(QWidget):
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(0)
 
-        self.pdfController = PdfController()
-        self.pdfView = PdfView()
+        self.pdf_doc = QPdfDocument()
+        self.pdfView = PdfView(self.pdf_doc)
+        self.pdfController = PdfController(self.pdfView)
         # self.pdfViewer.selectionChanged.connect(self.update_format)
         self.layout.addWidget(self.pdfController)
         self.layout.addWidget(self.pdfView)
 
-        self.pdf_doc = QPdfDocument()
-
-        self.initConnections()
-
-
-
-
-    def initConnections(self):
-        self.pdfController.pbZoomIn.clicked.connect(self.pdfView.zoomIn)
-        self.pdfController.pbZoomOut.clicked.connect(self.pdfView.zoomOut)
-        self.pdfController.pbZoomFit.clicked.connect(self.pdfView.zoomFit)
-        self.pdfController.pbZoomOG.clicked.connect(self.pdfView.zoomOG)
-        self.pdfController.pbRotateL.clicked.connect(self.pdfView.rotateL)
-        self.pdfController.pbRotateR.clicked.connect(self.pdfView.rotateR)
-
-        self.pdfController.pbFirstPage.clicked.connect(self.pdfView.firstPage)
-        self.pdfController.pbPrevPage.clicked.connect(self.pdfView.prevPage)
-        self.pdfController.pbNextPage.clicked.connect(self.pdfView.nextPage)
-        self.pdfController.pbLastPage.clicked.connect(self.pdfView.lastPage)
-
-        # curPage
 
     def setFile(self, path):
         load_result = self.pdf_doc.load(path)
@@ -63,6 +44,8 @@ class PdfWidget(QWidget):
         self.pdfView.setDocument(self.pdf_doc)
         self.pdfView.setPageMode(QPdfView.PageMode.MultiPage)
         # self.pdfView.setPageMode(QPdfView.PageMode.SinglePage)
+
+
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():
@@ -101,3 +84,5 @@ class PdfWidget(QWidget):
             return
 
         super().insertFromMimeData(source)
+
+

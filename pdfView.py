@@ -8,7 +8,7 @@ from PySide6.QtPdf import QPdfDocument
 
 
 class PdfView(QPdfView):
-    def __init__(self):
+    def __init__(self, pdf_doc):
         super().__init__()
         # self.setAutoFormatting(QPdfView.AutoFormattingFlag.AutoAll)
         # Initialize default font size.
@@ -16,7 +16,8 @@ class PdfView(QPdfView):
         self.setFont(font)
         # We need to repeat the size to init the current format.
         # self.setFontPointSize(12)
-
+        self.pdf_doc = pdf_doc
+    
     def zoomIn(self):
         self.setZoomMode(QPdfView.ZoomMode.Custom)
         zoom = self.zoomFactor() 
@@ -67,14 +68,13 @@ class PdfView(QPdfView):
         cur = nav.currentPage()
         if cur > 0:
             # jump(page, position, zoom=0 keeps current zoom)
-            nav.jump(cur + 1, QPointF(0, 0))    
+            nav.jump(cur - 1, QPointF(0, 0))    
 
     def nextPage(self):
         # QMessageBox.information(self, "Info", "nextPage() gets called.")
         nav = self.pageNavigator()
         cur = nav.currentPage()
-        pdf_doc = self.document()
-        numPages = pdf_doc.pageCount()
+        numPages = self.pdf_doc.pageCount()
         if cur < numPages - 1:
             # jump(page, position, zoom=0 keeps current zoom)
             nav.jump(cur + 1, QPointF(0, 0))        
@@ -84,11 +84,9 @@ class PdfView(QPdfView):
         # QMessageBox.information(self, "Info", "lastPage() gets called.")
         nav = self.pageNavigator()
         cur = nav.currentPage()
-        pdf_doc = self.document()
-        numPages = pdf_doc.pageCount()
+        numPages = self.pdf_doc.pageCount()
         nav.jump(numPages-1, QPointF(0, 0))
         return
-    
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():
