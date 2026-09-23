@@ -43,6 +43,8 @@ class PdfController(QWidget):
         self.pbZoomIn.setStatusTip("Zoom In PDF")
         self.layout.addWidget(self.pbZoomIn)
 
+        
+
         self.pbZoomOut = QPushButton(self)
         self.pbZoomOut.setIcon(QIcon(os.path.join("images", "zoom-out.svg")))
         self.pbZoomOut.setStatusTip("Zoom Out PDF")
@@ -94,6 +96,7 @@ class PdfController(QWidget):
 
         spacer = QSpacerItem(200, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.layout.addSpacerItem(spacer)
+
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():

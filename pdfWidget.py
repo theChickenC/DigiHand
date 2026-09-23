@@ -34,6 +34,25 @@ class PdfWidget(QWidget):
 
         self.pdf_doc = QPdfDocument()
 
+        self.initConnections()
+
+
+
+
+    def initConnections(self):
+        self.pdfController.pbZoomIn.clicked.connect(self.pdfView.zoomIn)
+        self.pdfController.pbZoomOut.clicked.connect(self.pdfView.zoomOut)
+        self.pdfController.pbZoomFit.clicked.connect(self.pdfView.zoomFit)
+        self.pdfController.pbZoomOG.clicked.connect(self.pdfView.zoomOG)
+        self.pdfController.pbRotateL.clicked.connect(self.pdfView.rotateL)
+        self.pdfController.pbRotateR.clicked.connect(self.pdfView.rotateR)
+
+        self.pdfController.pbFirstPage.clicked.connect(self.pdfView.firstPage)
+        self.pdfController.pbPrevPage.clicked.connect(self.pdfView.prevPage)
+        self.pdfController.pbNextPage.clicked.connect(self.pdfView.nextPage)
+        self.pdfController.pbLastPage.clicked.connect(self.pdfView.lastPage)
+
+        # curPage
 
     def setFile(self, path):
         load_result = self.pdf_doc.load(path)
@@ -42,14 +61,8 @@ class PdfWidget(QWidget):
             return
         
         self.pdfView.setDocument(self.pdf_doc)
-        # self.pdfView.setPageMode(QPdfView.PageMode.MultiPage)
+        self.pdfView.setPageMode(QPdfView.PageMode.MultiPage)
         # self.pdfView.setPageMode(QPdfView.PageMode.SinglePage)
-
-        # jump to first page
-        nav = self.pdfView.pageNavigator()
-        nav.jumpToPage(0)
-
-
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():

@@ -1,6 +1,7 @@
 import constants
 import utils
 from PySide6.QtGui import QFont, QImage, QTextDocument
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 
@@ -14,6 +15,43 @@ class PdfView(QPdfView):
         self.setFont(font)
         # We need to repeat the size to init the current format.
         # self.setFontPointSize(12)
+
+    def zoomIn(self):
+        QMessageBox.information(self, "Info", "zoomIn() gets called.")
+        return
+
+    def zoomOut(self):
+        QMessageBox.information(self, "Info", "zoomOut() gets called.")
+        return
+    def zoomFit(self):
+        QMessageBox.information(self, "Info", "zoomFit() gets called.")
+        return
+    def zoomOG(self):
+        QMessageBox.information(self, "Info", "zoomOG() gets called.")
+        return
+    def rotateL(self):
+        QMessageBox.information(self, "Info", "rotateL() gets called.")
+        return
+    def rotateR(self):
+        QMessageBox.information(self, "Info", "rotateR() gets called.")
+        return
+    
+    def firstPage(self):
+        QMessageBox.information(self, "Info", "firstPage() gets called.")
+        return
+    
+    def prevPage(self):
+        if self.navigator.currentPage() > 0:
+            self.navigator.jump(self.navigator.currentPage() - 1)
+
+    def nextPage(self):
+        QMessageBox.information(self, "Info", "nextPage() gets called.")
+        return
+
+    def lastPage(self):
+        QMessageBox.information(self, "Info", "lastPage() gets called.")
+        return
+    
 
     def canInsertFromMimeData(self, source):
         if source.hasImage():
@@ -52,3 +90,5 @@ class PdfView(QPdfView):
             return
 
         super().insertFromMimeData(source)
+
+    
