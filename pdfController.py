@@ -68,6 +68,11 @@ class PdfController(QWidget):
         self.pbRotateR.setStatusTip("Rotate PDF Right")
         self.layout.addWidget(self.pbRotateR)
 
+        self.pbFirstPage = QPushButton(self)
+        self.pbFirstPage.setIcon(QIcon(os.path.join("images", "go-first-view-page.svg")))
+        self.pbFirstPage.setStatusTip("First Page")
+        self.layout.addWidget(self.pbFirstPage)
+
         self.pbPrevPage = QPushButton(self)
         self.pbPrevPage.setIcon(QIcon(os.path.join("images", "go-previous-view-page.svg")))
         self.pbPrevPage.setStatusTip("Previous Page")
@@ -81,6 +86,11 @@ class PdfController(QWidget):
         self.pbNextPage.setIcon(QIcon(os.path.join("images", "go-next-view-page.svg")))
         self.pbNextPage.setStatusTip("Next Page")
         self.layout.addWidget(self.pbNextPage)
+
+        self.pbLastPage = QPushButton(self)
+        self.pbLastPage.setIcon(QIcon(os.path.join("images", "go-last-view-page.svg")))
+        self.pbLastPage.setStatusTip("Last Page")
+        self.layout.addWidget(self.pbLastPage)
 
         spacer = QSpacerItem(200, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.layout.addSpacerItem(spacer)

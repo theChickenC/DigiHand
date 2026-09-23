@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
         )
 
         try:
-            with open(self.path, "w") as f:
+            with open(self. path, "w") as f:
                 f.write(text)
 
         except Exception as e:
