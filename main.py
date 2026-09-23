@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QWidget,
     QSplitter,
+    QWidgetAction,
 )
 from PySide6.QtPrintSupport import QPrintDialog
 from PySide6.QtPdfWidgets import QPdfView
@@ -149,8 +150,16 @@ class MainWindow(QMainWindow):
         self.addToolBar(tool_toolbar)
         tool_menu = self.menuBar().addMenu("&Tools")
 
-        solve_action = QAction(
-            QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
+        self.cbSolvers = QComboBox()
+        self.cbSolvers.addItems(["Florence", "Moonbeam", "Qwen"])
+        self.cbSolvers.setCurrentIndex(2)
+        action_cbSolvers = QWidgetAction(self)
+        action_cbSolvers.setDefaultWidget(self.cbSolvers)
+        action_cbSolvers.setToolTip("Choose the AI library to solve")
+        tool_toolbar.addAction(action_cbSolvers)
+        # tool_menu.addAction(action_cbSolvers)
+
+        solve_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
         solve_action.setStatusTip("Convert to text")
         solve_action.triggered.connect(self.solve)
         tool_menu.addAction(solve_action)
@@ -281,15 +290,18 @@ class MainWindow(QMainWindow):
     def solve(self):
         inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
         outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2"
-        # sf = SolverFlorence()
-        # output = sf.run(inputPath, outputPath)
-        # print(output)
-
-        # sq = SolverQwen()
-        sm = SolverMoonbeam()
-
-        # output = sq.run(inputPath, outputPath)
-        output = sm.run(inputPath, outputPath)
+        idxSolver = self.cbSolvers.currentIndex()
+        match idxSolver:
+            case 0:
+                sf = SolverFlorence()
+                output = sf.run(inputPath, outputPath)
+            case 1:
+                sm = SolverMoonbeam()
+                output = sm.run(inputPath, outputPath)
+            case 2:
+                sq = SolverQwen()
+                output = sq.run(inputPath, outputPath)
+        print(output)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -111,9 +111,9 @@ class SolverQwen(SolverBase):
         output_path.write_text(text, encoding="utf-8")
 
     def run(self, image_path: str = None, output: str = None):
-        import torch
-        
         print(f"Running {self.model_name} | input: {image_path}, output: {output}")
+        return
+        import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         print(f"Using device: {self.device} with dtype: {self.torch_dtype}")
