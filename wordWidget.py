@@ -1,8 +1,9 @@
 import constants
 import utils
-from PySide6.QtGui import QFont, QImage, QTextDocument
+from PySide6.QtGui import QFont, QImage, QTextDocument, QTextCharFormat
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
+from PySide6.QtCore import Signal, Slot
 from widgets import CustomTextEdit
 from wordController import WordController
 from wordView import WordView
@@ -34,7 +35,7 @@ class WordWidget(QWidget):
         # self.pdfViewer.selectionChanged.connect(self.update_format)
         self.layout.addWidget(self.wordController)
         self.layout.addWidget(self.editor)
-
+        
         # start_width = self.width()
         # half_width = int(start_width * 0.5)
         # self.wordController.setMaximumWidth(half_width)
@@ -48,6 +49,11 @@ class WordWidget(QWidget):
         # self.wordController.copy_action.triggered.connect(self.editor.copy)
         # self.wordController.paste_action.triggered.connect(self.editor.paste)
         # self.wordController.select_action.triggered.connect(self.editor.selectAll)
+        self.wordController.boldToggled.connect(self.editor.set_bold)
+        # self.editor.formatChanged.connect(self._on_format_changed)
+
+        # self.bold_action.toggled.connect(self.update_format)  
+        
         # self.wordController.wrap_action.triggered.connect(self.edit_toggle_wrap)
 
         #self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
@@ -78,6 +84,13 @@ class WordWidget(QWidget):
         #     lambda: self.editor.setAlignment(Qt.AlignmentFlag.AlignJustify)
         # )
 
+        
+    def _on_format_changed(self, fmt: QTextCharFormat):
+        is_bold = fmt.fontWeight() == QFont.Weight.Bold
+        # self.wordController.pbBold.connect(self.editor.fontWeight() == QFont.Weight.Bold)
+
+        self.wordController.set_checked_silently(is_bold)
+        
 
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
@@ -96,7 +109,6 @@ class WordWidget(QWidget):
         # jump to first page
         nav = self.pdfView.pageNavigator()
         nav.jumpToPage(0)
-
 
 
     def canInsertFromMimeData(self, source):
@@ -137,40 +149,44 @@ class WordWidget(QWidget):
 
         super().insertFromMimeData(source)
 
+        
 
 
     def update_format(self):
-        """
-        Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
-        toolbars/etc. in sync with the current edit state.
-        :return:
-        """
-        # Disable signals for all format widgets, so changing values here does not trigger further formatting.
-        # self.block_signals(self._format_actions, True)
+         """
+         Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
+         toolbars/etc. in sync with the current edit state.
+         :return:
+         """
+         # Disable signals for all format widgets, so changing values here does not trigger further formatting.
+         self.block_signals(self._format_actions, True)
+ 
+         self.fonts.setCurrentFont(self.editor.currentFont())
+         # Nasty, but we get the font-size as a float but want it was an int
+         self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
+ 
+         self.italic_action.setChecked(self.editor.fontItalic())
+         self.underline_action.setChecked(self.editor.fontUnderline())
+            
+ 
+         self.alignl_action.setChecked(
+             self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
+         )
+         self.alignc_action.setChecked(
+             self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
+         )
+         self.alignr_action.setChecked(
+             self.editor.alignment() == Qt.AlignmentFlag.AlignRight
+         )
+         self.alignj_action.setChecked(
+             self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
+         )
+ 
+         self.block_signals(self._format_actions, False)
 
-        # self.wordController.update_format()
-        # self.editor.update_format()
+    def block_signals(self, objects, b):
+        for o in objects:
+            o.blockSignals(b)
 
-
-        # self.fonts.setCurrentFont(self.editor.currentFont())
-        # # Nasty, but we get the font-size as a float but want it was an int
-        # self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
-
-        # self.italic_action.setChecked(self.editor.fontItalic())
-        # self.underline_action.setChecked(self.editor.fontUnderline())
-        # self.bold_action.setChecked(self.editor.fontWeight() == QFont.Weight.Bold)
-
-        # self.alignl_action.setChecked(
-        #     self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
-        # )
-        # self.alignc_action.setChecked(
-        #     self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
-        # )
-        # self.alignr_action.setChecked(
-        #     self.editor.alignment() == Qt.AlignmentFlag.AlignRight
-        # )
-        # self.alignj_action.setChecked(
-        #     self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
-        # )
-
-        # self.block_signals(self._format_actions, False)
+    def update_format(self):
+        return

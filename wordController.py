@@ -4,7 +4,7 @@ import os
 import sys
 
 from PySide6.QtGui import QAction, QActionGroup, QFont, QIcon, QKeySequence, QImage, QTextDocument
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal, Slot
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 from wordView import WordView
@@ -28,9 +28,11 @@ from PySide6.QtWidgets import (
 )
 
 class WordController(QWidget):
+
+    boldToggled = Signal(bool)
+
     def __init__(self):
         super().__init__()
-
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(0)
@@ -96,6 +98,7 @@ class WordController(QWidget):
         self.pbBold.setIcon(QIcon(os.path.join("images", "edit-bold.png")))
         self.pbBold.setStatusTip("Bold")
         self.layout.addWidget(self.pbBold)
+        self.pbBold.clicked.connect(self.on_clicked_bold)
 
         # self.pbItalic = QPushButton("Italic", self)
         self.pbItalic = QPushButton(self)
@@ -136,13 +139,6 @@ class WordController(QWidget):
         spacer = QSpacerItem(200, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.layout.addSpacerItem(spacer)
     
-        # format_group = QActionGroup(self)
-        # format_group.setExclusive(True)
-        # format_group.addAction(self.alignl_action)
-        # format_group.addAction(self.alignc_action)
-        # format_group.addAction(self.alignr_action)
-        # format_group.addAction(self.alignj_action)
-
         # self._format_actions = [
         #     self.fonts,
         #     self.fontsize,
@@ -153,48 +149,61 @@ class WordController(QWidget):
         # ]
 
 
-
         # Initialize.
         self.update_format()
         # self.update_title()
         self.show()
 
- 
+    
     def block_signals(self, objects, b):
         for o in objects:
             o.blockSignals(b)
 
-    def update_format(self):
+    def on_clicked_bold(self):
+        self.boldToggled.emit(self.pbBold.isChecked())
+
+    @Slot(bool)
+    def set_checked_silently(self, checked: bool):
         """
-        Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
-        toolbars/etc. in sync with the current edit state.
-        :return:
+        Update the button's visual state WITHOUT re-emitting boldToggled.
+        Needed when the editor's format changes because the cursor moved,
+        not because the user clicked this button.
         """
-        # Disable signals for all format widgets, so changing values here does not trigger further formatting.
-        self.block_signals(self._format_actions, True)
+        self.pbBold.blockSignals(True)
+        self.pbBold.setChecked(checked)
+        self.pbBold.blockSignals(False)
+        
+    # def update_format(self):
+    #     """
+    #     Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
+    #     toolbars/etc. in sync with the current edit state.
+    #     :return:
+    #     """
+    #     # Disable signals for all format widgets, so changing values here does not trigger further formatting.
+    #     self.block_signals(self._format_actions, True)
 
-        self.fonts.setCurrentFont(self.editor.currentFont())
-        # Nasty, but we get the font-size as a float but want it was an int
-        self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
+    #     self.fonts.setCurrentFont(self.editor.currentFont())
+    #     # Nasty, but we get the font-size as a float but want it was an int
+    #     self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
 
-        self.italic_action.setChecked(self.editor.fontItalic())
-        self.underline_action.setChecked(self.editor.fontUnderline())
-        self.bold_action.setChecked(self.editor.fontWeight() == QFont.Weight.Bold)
+    #     self.italic_action.setChecked(self.editor.fontItalic())
+    #     self.underline_action.setChecked(self.editor.fontUnderline())
+    #     self.bold_action.setChecked(self.editor.fontWeight() == QFont.Weight.Bold)
 
-        self.alignl_action.setChecked(
-            self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
-        )
-        self.alignc_action.setChecked(
-            self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
-        )
-        self.alignr_action.setChecked(
-            self.editor.alignment() == Qt.AlignmentFlag.AlignRight
-        )
-        self.alignj_action.setChecked(
-            self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
-        )
+    #     self.alignl_action.setChecked(
+    #         self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
+    #     )
+    #     self.alignc_action.setChecked(
+    #         self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
+    #     )
+    #     self.alignr_action.setChecked(
+    #         self.editor.alignment() == Qt.AlignmentFlag.AlignRight
+    #     )
+    #     self.alignj_action.setChecked(
+    #         self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
+    #     )
 
-        self.block_signals(self._format_actions, False)
+    #     self.block_signals(self._format_actions, False)
 
     def dialog_critical(self, s):
         dlg = QMessageBox(self)

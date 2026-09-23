@@ -1,6 +1,7 @@
 import constants
 import utils
-from PySide6.QtGui import QFont, QImage, QTextDocument
+from PySide6.QtGui import QFont, QImage, QTextDocument, QTextCharFormat
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 # from wordController import WordController
@@ -21,6 +22,8 @@ from PySide6.QtWidgets import (
 )
 
 class WordView(QTextEdit):
+    # formatChanged = Signal(QTextCharFormat) 
+    
     def __init__(self):
         super().__init__()
         self.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
@@ -30,7 +33,18 @@ class WordView(QTextEdit):
         # We need to repeat the size to init the current format.
         self.setFontPointSize(12)
 
-    def canInsertFromMimeData(self, source):
+        # self.currentCharFormatChanged.connect(self.formatChanged)
+
+    # @Slot(bool)
+    def set_bold(self, checked: bool):
+        # fmt = QTextCharFormat()
+        # fmt.setFontWeight(QFont.Weight.Bold if checked else QFont.Weight.Normal)
+        self.fontWeight() == QFont.Weight.Bold
+        # Applies to the current selection if there is one; otherwise
+        # applies to whatever gets typed next at the cursor.
+        # self.mergeCurrentCharFormat(fmt)
+
+    def canInsertFromMimeData(self, source):    
         if source.hasImage():
             return True
         else:

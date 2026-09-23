@@ -3,9 +3,18 @@ import sys
 
 import constants
 import utils
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QActionGroup, QFont, QIcon, QKeySequence
-from PySide6.QtPrintSupport import QPrintDialog
+from PySide6.QtCore import (
+    Qt, 
+    QSize, 
+    QSettings,
+)
+from PySide6.QtGui import (
+    QAction, 
+    QActionGroup, 
+    QFont, 
+    QIcon, 
+    QKeySequence,
+    )
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -20,17 +29,22 @@ from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
 )
+from PySide6.QtPrintSupport import QPrintDialog
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
-
 
 from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.settings = QSettings("clairc.com", "DigiHand")
+        self.restore_window_state()
+
 
         # PDF View
         self.pdfWidget = PdfWidget()
@@ -140,6 +154,16 @@ class MainWindow(QMainWindow):
         # Initialize.
         self.update_title()
         self.show()
+
+    def restore_window_state(self):
+        geometry = self.settings.value("MainWindow/geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+
+    def closeEvent(self, event):
+        self.settings.setValue("MainWindow/geometry", self.saveGeometry())
+        super().closeEvent(event)
+
 
     def block_signals(self, objects, b):
         for o in objects:
