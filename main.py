@@ -36,7 +36,7 @@ from PySide6.QtPdf import QPdfDocument
 from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
-
+from solverFlorence import SolverFlorence
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -142,11 +142,17 @@ class MainWindow(QMainWindow):
         edit_menu = self.menuBar().addMenu("&Edit")
 
 
-        format_toolbar = QToolBar("Format")
-        format_toolbar.setIconSize(QSize(16, 16))
-        self.addToolBar(format_toolbar)
-        format_menu = self.menuBar().addMenu("&Format")
+        tool_toolbar = QToolBar("Tools")
+        tool_toolbar.setIconSize(QSize(16, 16))
+        self.addToolBar(tool_toolbar)
+        tool_menu = self.menuBar().addMenu("&Tools")
 
+        solve_action = QAction(
+            QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
+        solve_action.setStatusTip("Convert to text")
+        solve_action.triggered.connect(self.solve)
+        tool_menu.addAction(solve_action)
+        tool_toolbar.addAction(solve_action)
 
         # Initialize.
         self.update_title()
@@ -270,6 +276,12 @@ class MainWindow(QMainWindow):
             % (os.path.basename(self.path) if self.path else "Untitled")
         )
 
+    def solve(self):
+        sf = SolverFlorence()
+        inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
+        outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2"
+        output = sf.run(inputPath, outputPath)
+        print(output)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
