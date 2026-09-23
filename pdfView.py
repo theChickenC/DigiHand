@@ -1,6 +1,7 @@
 import constants
 import utils
 from PySide6.QtGui import QFont, QImage, QTextDocument
+from PySide6.QtCore import QPointF
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
@@ -55,19 +56,37 @@ class PdfView(QPdfView):
         return
     
     def firstPage(self):
-        QMessageBox.information(self, "Info", "firstPage() gets called.")
+        # QMessageBox.information(self, "Info", "firstPage() gets called.")
+        nav = self.pageNavigator()
+        cur = nav.currentPage()
+        nav.jump(0, QPointF(0, 0))
         return
     
     def prevPage(self):
-        if self.navigator.currentPage() > 0:
-            self.navigator.jump(self.navigator.currentPage() - 1)
+        nav = self.pageNavigator()
+        cur = nav.currentPage()
+        if cur > 0:
+            # jump(page, position, zoom=0 keeps current zoom)
+            nav.jump(cur + 1, QPointF(0, 0))    
 
     def nextPage(self):
-        QMessageBox.information(self, "Info", "nextPage() gets called.")
+        # QMessageBox.information(self, "Info", "nextPage() gets called.")
+        nav = self.pageNavigator()
+        cur = nav.currentPage()
+        pdf_doc = self.document()
+        numPages = pdf_doc.pageCount()
+        if cur < numPages - 1:
+            # jump(page, position, zoom=0 keeps current zoom)
+            nav.jump(cur + 1, QPointF(0, 0))        
         return
 
     def lastPage(self):
-        QMessageBox.information(self, "Info", "lastPage() gets called.")
+        # QMessageBox.information(self, "Info", "lastPage() gets called.")
+        nav = self.pageNavigator()
+        cur = nav.currentPage()
+        pdf_doc = self.document()
+        numPages = pdf_doc.pageCount()
+        nav.jump(numPages-1, QPointF(0, 0))
         return
     
 
