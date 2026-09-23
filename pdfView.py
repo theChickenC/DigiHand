@@ -17,23 +17,41 @@ class PdfView(QPdfView):
         # self.setFontPointSize(12)
 
     def zoomIn(self):
-        QMessageBox.information(self, "Info", "zoomIn() gets called.")
+        self.setZoomMode(QPdfView.ZoomMode.Custom)
+        zoom = self.zoomFactor() 
+        self.setZoomFactor(zoom + 0.2)
+        # QMessageBox.information(self, "Info", "zoomIn() gets called.")
         return
 
     def zoomOut(self):
-        QMessageBox.information(self, "Info", "zoomOut() gets called.")
+        self.setZoomMode(QPdfView.ZoomMode.Custom)
+        zoom = self.zoomFactor() 
+        self.setZoomFactor(zoom - 0.2)
+        # QMessageBox.information(self, "Info", "zoomOut() gets called.")
         return
+    
     def zoomFit(self):
-        QMessageBox.information(self, "Info", "zoomFit() gets called.")
+        self.setZoomMode(QPdfView.ZoomMode.FitInView)
+        # QMessageBox.information(self, "Info", "zoomFit() gets called.")
         return
+    
     def zoomOG(self):
-        QMessageBox.information(self, "Info", "zoomOG() gets called.")
+        self.setZoomMode(QPdfView.ZoomMode.Custom)
+        self.setZoomFactor(1)
+        # QMessageBox.information(self, "Info", "zoomOG() gets called.")
         return
+    
     def rotateL(self):
-        QMessageBox.information(self, "Info", "rotateL() gets called.")
+        angle = self.pageRotation()
+        self.setPageRotation( (angle - 90) % 360)
+        # QMessageBox.information(self, "Info", "rotateL() gets called.")
+        
         return
+    
     def rotateR(self):
-        QMessageBox.information(self, "Info", "rotateR() gets called.")
+        angle = self.pageRotation()
+        self.setPageRotation( (angle + 90) % 360)
+        # QMessageBox.information(self, "Info", "rotateR() gets called.")
         return
     
     def firstPage(self):
