@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from PIL import Image
 from solverBase import SolverBase
+from digiHandEnums import InputType
+from digiHandTools import DigiHandTools
 
 class SolverFlorence(SolverBase):
     def __init__(self):
@@ -24,8 +26,7 @@ class SolverFlorence(SolverBase):
         )
         return [model, processor]
 
-    def recognize_text(self, model, processor, image_file_path: str) -> str:
-        image = Image.open(image_file_path).convert("RGB")
+    def recognize_text(self, model, processor, image) -> str:
         prompt = "<OCR>"
         inputs = processor(text=prompt, images=image, return_tensors="pt").to(self.device, self.torch_dtype)
         generated_ids = model.generate(
@@ -41,64 +42,58 @@ class SolverFlorence(SolverBase):
 
         return parsed_answer[prompt]
 
-    def save_file(self, image_path, output_folder, text):
-        image_path = Path(image_path)
+    def save_file(self, page_num, output_folder, text):
         output_folder = Path(output_folder)
         output_folder.mkdir(parents=True, exist_ok=True)
 
-        output_path = output_folder / f"{image_path.stem}-Florence.txt"
+        output_path = output_folder / f"page_{page_num}.txt"
         output_path.write_text(text, encoding="utf-8")
 
 
-    # def run(self, image_path: str = None, output: str = None):
-    #     # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
-    #     # return
-    #     import torch
-    #     self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    #     self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-    #     print(f"Using device: {self.device} with dtype: {self.torch_dtype}")
-
-
-    #     folder = Path(image_path)
-    #     output_folder = Path(output)
-    #     model, processor = self.get_model_and_processor()
-
-    #     for file in folder.glob("*.png"):
-    #         text = self.recognize_text(model, processor, file)
-    #         self.save_file(file, output_folder, text)
-    #         print(f"Saved {file.stem}.txt")
-
-    #     self.result = f"Florence output for prompt: {input}"
-    #     return self.result
-    def run(self, image_path=None, output=None, on_file_saved=None, on_progress=None):
+    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
-        
-        folder = Path(image_path)
-        output_folder = Path(output)
-        output_folder.mkdir(parents=True, exist_ok=True)
 
-        files = [f for f in folder.iterdir()
-                if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]   # ← see #2
-        files.sort()
-        if not files:
-            print(f"WARNING: no images found in {folder}")
-        if on_progress and files:
-            on_progress(5, f"found {len(files)} files")
-
+        folder_in = Path(input)
+        folder_out = Path(output)
+        folder_out.mkdir(parents=True, exist_ok=True)
         model, processor = self.get_model_and_processor()
 
-        for i, file in enumerate(files, 1):
-            text = self.recognize_text(model, processor, file)
-            self.save_file(file, output_folder, text)
-            msg = f"Saved {file.stem}.txt"
+        pages = []
+        if input_type == InputType.PDF:
+            pages = DigiHandTools.pdf_pages_to_images(folder_in)
+            if not pages:
+                print(f"WARNING: no images converted from {folder_in}")
+            if on_progress and pages:
+                on_progress(5, f"found {len(pages)} files")
+
+        elif input_type == InputType.IMAGES:
+            #Warning: Does not parse the image folder in the correct order
+            images = [f for f in folder_in.iterdir() if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]
+            print(images)
+            # images.sort()
+            if not images:
+                print(f"WARNING: no images found in {folder_in}")
+            if on_progress and images:
+                on_progress(5, f"found {len(images)} files")
+            for i, file in enumerate(images, 1):
+                image = Image.open(file).convert("RGB")
+                pages.append(image)
+        else:
+            return "Not a supported input file(s)."
+
+        for i, page in enumerate(pages, 1):
+            text = self.recognize_text(model, processor, page)
+            self.save_file(i, folder_out, text)
+            msg = f"Saved page {i}.txt"
             print(msg)                                  # still prints to console
             if on_file_saved:
                 on_file_saved(msg)                      # ← this reaches the dialog
             if on_progress:
-                on_progress(int(100 * i / len(files)), msg)
+                on_progress(int(100 * i / len(pages)), msg)
 
-        self.result = f"Florence output for prompt: {image_path}"
+        self.result = f"Florence output for prompt: {input}"
+        
         return self.result

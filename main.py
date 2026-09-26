@@ -1,9 +1,9 @@
 import os
 import sys
-
 import constants
 import utils
 import multiprocessing
+import tempfile
 
 from PySide6.QtCore import (
     Qt, 
@@ -50,6 +50,9 @@ from solverMoondream import SolverMoondream
 from dlgSolver import DlgSolver
 from dlgSolver2 import DlgSolver2
 
+from digiHandEnums import InputType
+from digiHandTools import DigiHandTools
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -75,9 +78,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         self.path = None
-        self.inputPath = None
-        self.outputPath = None
-        self.pdfPath= None
+        self.pdfPath = None
+
+        pid = os.getpid()
+        self.outputPath = Path(tempfile.gettempdir()) / "DigiHand" / f"pid_{os.getpid()}"
+        self.outputPath.mkdir(parents=True, exist_ok=True)
 
         # # Doc View
         # self.editor = CustomTextEdit()
@@ -171,7 +176,7 @@ class MainWindow(QMainWindow):
 
         self.cbSolvers = QComboBox()
         self.cbSolvers.addItems(["Florence", "Moondream", "Qwen"])
-        self.cbSolvers.setCurrentIndex(2)
+        self.cbSolvers.setCurrentIndex(0)
         action_cbSolvers = QWidgetAction(self)
         action_cbSolvers.setDefaultWidget(self.cbSolvers)
         action_cbSolvers.setToolTip("Choose the AI library to solve")
@@ -224,13 +229,14 @@ class MainWindow(QMainWindow):
         self.pdfPath = path
         self.pdfWidget.setFile(path)
         self.statusBar().showMessage(f"PDF loaded: {self.pdfPath}")
-        self.split_pdf_into_pages()
+        # self.split_pdf_into_pages()
 
-    def split_pdf_into_pages(self):
+    def set_output_folder(self):
         output_folder = QFileDialog.getExistingDirectory(self, "Choose output folder for pages")
         if not output_folder:
             return
-    
+
+    def split_pdf_into_pages(self):    
         reader = PdfReader(self.pdfPath)
         output_folder = Path(output_folder)
         output_folder.mkdir(parents=True, exist_ok=True)
@@ -325,11 +331,11 @@ class MainWindow(QMainWindow):
         )
 
     def solve(self):
-        inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
-        outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
+        self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
         idxSolver = self.cbSolvers.currentIndex()
         dlg = DlgSolver2()
-        dlg.start_solver(model=idxSolver, input= inputPath, output=outputPath)
+        dlg.start_solver(model=idxSolver, input_type = InputType.IMAGES, input= self.pdfPath, output=self.outputPath)
         dlg.exec()
 
 if __name__ == "__main__":

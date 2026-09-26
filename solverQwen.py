@@ -2,7 +2,7 @@ import pymupdf
 from pathlib import Path
 from PIL import Image
 from solverBase import SolverBase
-import pymupdf # only needed for PDF input
+from digiHandEnums import InputType
 
 MODEL_ID = "Qwen/Qwen2.5-VL-3B-Instruct"
 OCR_PROMPT = (
@@ -110,7 +110,7 @@ class SolverQwen(SolverBase):
         output_path = output_folder / f"{image_path.stem}-Qwen.txt"
         output_path.write_text(text, encoding="utf-8")
 
-    def run(self, image_path: str = None, output: str = None, on_file_saved=None, on_progress=None):
+    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
         # return
         import torch

@@ -3,6 +3,7 @@ from pathlib import Path
 from PIL import Image
 import pymupdf # only needed for PDF input
 from solverBase import SolverBase
+from digiHandEnums import InputType
 
 MODEL_REVISION = "2025-01-09"  # pin a known-good revision; update as needed
  
@@ -59,7 +60,7 @@ class SolverMoondream(SolverBase):
         output_path = output_folder / f"{image_path.stem}-Moondream.txt"
         output_path.write_text(text, encoding="utf-8")
 
-    def run(self, image_path: str = None, output: str = None, on_file_saved=None, on_progress=None):
+    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
         # return
         import torch
