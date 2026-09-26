@@ -3,6 +3,8 @@ import sys
 
 import constants
 import utils
+import multiprocessing
+
 from PySide6.QtCore import (
     Qt, 
     QSize, 
@@ -37,9 +39,13 @@ from PySide6.QtPdf import QPdfDocument
 from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
+
 from solverFlorence import SolverFlorence
 from solverQwen import SolverQwen
-from solverMoonbeam import SolverMoonbeam
+from solverMoondream import SolverMoondream
+
+from dlgSolver import DlgSolver
+from dlgSolver2 import DlgSolver2
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -66,6 +72,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         self.path = None
+        self.inputPath = None
+        self.outputPath = None
+        self.pdfPath= None
 
         # # Doc View
         # self.editor = CustomTextEdit()
@@ -151,7 +160,7 @@ class MainWindow(QMainWindow):
         tool_menu = self.menuBar().addMenu("&Tools")
 
         self.cbSolvers = QComboBox()
-        self.cbSolvers.addItems(["Florence", "Moonbeam", "Qwen"])
+        self.cbSolvers.addItems(["Florence", "Moondream", "Qwen"])
         self.cbSolvers.setCurrentIndex(2)
         action_cbSolvers = QWidgetAction(self)
         action_cbSolvers.setDefaultWidget(self.cbSolvers)
@@ -202,10 +211,15 @@ class MainWindow(QMainWindow):
         if not path:
             return
 
+        self.pdfPath = path
         self.pdfWidget.setFile(path)
-
+        self.splitPdf(self, path)
         self.statusBar().showMessage(f"PDF loaded: {path}")
 
+    # def splitPdf(self):
+
+
+    #     self.inputPath = None
 
     def file_open(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -289,19 +303,28 @@ class MainWindow(QMainWindow):
 
     def solve(self):
         inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
-        outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2"
+        outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
         idxSolver = self.cbSolvers.currentIndex()
-        match idxSolver:
-            case 0:
-                sf = SolverFlorence()
-                output = sf.run(inputPath, outputPath)
-            case 1:
-                sm = SolverMoonbeam()
-                output = sm.run(inputPath, outputPath)
-            case 2:
-                sq = SolverQwen()
-                output = sq.run(inputPath, outputPath)
-        print(output)
+        # match idxSolver:
+        #     case 0:
+        #         sf = SolverFlorence()
+        #         output = sf.run(inputPath, outputPath)
+        #     case 1:
+        #         sm = SolverMoondream()
+        #         output = sm.run(inputPath, outputPath)
+        #     case 2:
+        #         sq = SolverQwen()
+        #         output = sq.run(inputPath, outputPath)
+        # print(output)
+        # input_folder=r"Journal2/imageJ2"
+        # output_folder=r"Journal2/textJ2/Qwen"
+
+        # dlg = DlgSolver(self)
+        # dlg.start_solver(program="Qwen2.5-VL", args= [input_folder, output_folder])
+        # dlg.exec()
+        dlg = DlgSolver2()
+        dlg.start_solver(model=idxSolver, input= inputPath, output=outputPath)
+        dlg.exec()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
