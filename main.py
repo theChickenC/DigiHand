@@ -36,6 +36,9 @@ from PySide6.QtPrintSupport import QPrintDialog
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 
+from pypdf import PdfReader, PdfWriter
+from pathlib import Path
+
 from widgets import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
@@ -159,6 +162,13 @@ class MainWindow(QMainWindow):
         self.addToolBar(tool_toolbar)
         tool_menu = self.menuBar().addMenu("&Tools")
 
+        # split_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
+        # split_action.setStatusTip("Split the PDF")
+        # split_action.triggered.connect(self.split_pdf_into_pages)
+        # tool_menu.addAction(split_action)
+        # tool_toolbar.addAction(split_action)
+
+
         self.cbSolvers = QComboBox()
         self.cbSolvers.addItems(["Florence", "Moondream", "Qwen"])
         self.cbSolvers.setCurrentIndex(2)
@@ -213,13 +223,26 @@ class MainWindow(QMainWindow):
 
         self.pdfPath = path
         self.pdfWidget.setFile(path)
-        self.splitPdf(self, path)
-        self.statusBar().showMessage(f"PDF loaded: {path}")
+        self.statusBar().showMessage(f"PDF loaded: {self.pdfPath}")
+        self.split_pdf_into_pages()
 
-    # def splitPdf(self):
+    def split_pdf_into_pages(self):
+        output_folder = QFileDialog.getExistingDirectory(self, "Choose output folder for pages")
+        if not output_folder:
+            return
+    
+        reader = PdfReader(self.pdfPath)
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
 
+        for i, page in enumerate(reader.pages, 1):
+            writer = PdfWriter()
+            writer.add_page(page)
+            out_path = output_folder / f"page_{i:03d}.pdf"
+            with open(out_path, "wb") as f:
+                writer.write(f)             # <- saves once per page, no dialog
 
-    #     self.inputPath = None
+        return len(reader.pages)
 
     def file_open(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -305,23 +328,6 @@ class MainWindow(QMainWindow):
         inputPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
         outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
         idxSolver = self.cbSolvers.currentIndex()
-        # match idxSolver:
-        #     case 0:
-        #         sf = SolverFlorence()
-        #         output = sf.run(inputPath, outputPath)
-        #     case 1:
-        #         sm = SolverMoondream()
-        #         output = sm.run(inputPath, outputPath)
-        #     case 2:
-        #         sq = SolverQwen()
-        #         output = sq.run(inputPath, outputPath)
-        # print(output)
-        # input_folder=r"Journal2/imageJ2"
-        # output_folder=r"Journal2/textJ2/Qwen"
-
-        # dlg = DlgSolver(self)
-        # dlg.start_solver(program="Qwen2.5-VL", args= [input_folder, output_folder])
-        # dlg.exec()
         dlg = DlgSolver2()
         dlg.start_solver(model=idxSolver, input= inputPath, output=outputPath)
         dlg.exec()

@@ -74,8 +74,8 @@ class SolverFlorence(SolverBase):
         import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        print(f"Using device: {self.device} with dtype: {self.torch_dtype}")
-
+        on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
+        
         folder = Path(image_path)
         output_folder = Path(output)
         output_folder.mkdir(parents=True, exist_ok=True)
