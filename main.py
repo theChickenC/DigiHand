@@ -39,7 +39,7 @@ from PySide6.QtPdf import QPdfDocument
 from pypdf import PdfReader, PdfWriter
 from pathlib import Path
 
-from widgets import CustomTextEdit
+from customTextEdit import CustomTextEdit
 from pdfWidget import PdfWidget
 from wordWidget import WordWidget
 
@@ -88,6 +88,8 @@ class MainWindow(QMainWindow):
         pid = os.getpid()
         self.outputPath = Path(tempfile.gettempdir()) / "DigiHand" / f"pid_{os.getpid()}"
         self.outputPath.mkdir(parents=True, exist_ok=True)
+
+        self.wordWidget.editor.dirtyChanged.connect(self.update_title)
 
         # # Doc View
         # self.editor = CustomTextEdit()
@@ -336,7 +338,6 @@ class MainWindow(QMainWindow):
             "%s - DigiHand"
             % (os.path.basename(self.pdfPath) if self.pdfPath else "Untitled")
         )
-
     def solve(self):
         # self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
         self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Qwen-2.5"
