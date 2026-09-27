@@ -42,14 +42,6 @@ class SolverFlorence(SolverBase):
 
         return parsed_answer[prompt]
 
-    def save_file(self, page_num, output_folder, text):
-        output_folder = Path(output_folder)
-        output_folder.mkdir(parents=True, exist_ok=True)
-
-        output_path = output_folder / f"page_{page_num}.txt"
-        output_path.write_text(text, encoding="utf-8")
-
-
     def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -95,5 +87,4 @@ class SolverFlorence(SolverBase):
                 on_progress(int(100 * i / len(pages)), msg)
 
         self.result = f"Florence output for prompt: {input}"
-        
         return self.result

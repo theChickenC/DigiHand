@@ -1,8 +1,10 @@
+import os
 import pymupdf
 from pathlib import Path
 from PIL import Image
 from solverBase import SolverBase
 from digiHandEnums import InputType
+from digiHandTools import DigiHandTools
 
 MODEL_ID = "Qwen/Qwen2.5-VL-3B-Instruct"
 OCR_PROMPT = (
@@ -39,10 +41,10 @@ class SolverQwen(SolverBase):
         )
         return self.model, self.processor
 
-    def recognize_text(self, model, processor, image_file_path: str) -> str:
+    def recognize_text(self, model, processor, image) -> str:
         import torch
         from qwen_vl_utils import process_vision_info
-        image = Image.open(image_file_path).convert("RGB")
+        # image = Image.open(image_file_path).convert("RGB")
     
         messages = [
             {
@@ -80,35 +82,6 @@ class SolverQwen(SolverBase):
         )[0]
         return output_text.strip()
 
-    # wait this is good (multipage pdf to single page)
-    # def pdf_to_images(self, pdf_path: Path, dpi: int = 300):
-    #     doc = fitz.open(pdf_path)
-    #     zoom = dpi / 72  # PDF default is 72 dpi
-    #     matrix = fitz.Matrix(zoom, zoom)
-    #     for i, page in enumerate(doc):
-    #         pix = page.get_pixmap(matrix=matrix)
-    #         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-    #         yield i, img
-    #     doc.close()
-
-    # def pdf_to_images(pdf_path: Path, dpi: int = 300):
-    #     """Yield (page_index, PIL.Image) for each page of a PDF, rendered at dpi."""
-    #     doc = fitz.open(pdf_path)
-    #     zoom = dpi / 72  # PDF default is 72 dpi
-    #     matrix = fitz.Matrix(zoom, zoom)
-    #     for i, page in enumerate(doc):
-    #         pix = page.get_pixmap(matrix=matrix)
-    #         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-    #         yield i, img
-    #     doc.close()
-
-    def save_file(self, image_path, output_folder, text):
-        image_path = Path(image_path)
-        output_folder = Path(output_folder)
-        output_folder.mkdir(parents=True, exist_ok=True)
-
-        output_path = output_folder / f"{image_path.stem}-Qwen.txt"
-        output_path.write_text(text, encoding="utf-8")
 
     def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
@@ -118,27 +91,43 @@ class SolverQwen(SolverBase):
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
         on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
 
-        folder = Path(image_path)
-        output_folder = Path(output)
+        folder_in = Path(input)
+        folder_out = Path(output)
+        folder_out.mkdir(parents=True, exist_ok=True)
         model, processor = self.get_model_and_processor()
 
-        files = [f for f in folder.iterdir()
-                if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]   # ← see #2
-        files.sort()
-        if not files:
-            print(f"WARNING: no images found in {folder}")
-        if on_progress and files:
-            on_progress(5, f"found {len(files)} files")
+        pages = []
+        if input_type == InputType.PDF:
+            pages = DigiHandTools.pdf_pages_to_images(folder_in)
+            if not pages:
+                print(f"WARNING: no images converted from {folder_in}")
+            if on_progress and pages:
+                on_progress(5, f"found {len(pages)} files")
 
-        for i, file in enumerate(files, 1):                    # i = 1-based index
-            text = self.recognize_text(model, processor, file) # pass the path, not an Image
-            self.save_file(file, output_folder, text)
-            msg = f"Saved {file.stem}.txt"
-            print(msg)                                          # console only
+        elif input_type == InputType.IMAGES:
+            #Warning: Does not parse the image folder in the correct order
+            images = [f for f in folder_in.iterdir() if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]
+            print(images)
+            # images.sort()
+            if not images:
+                print(f"WARNING: no images found in {folder_in}")
+            if on_progress and images:
+                on_progress(5, f"found {len(images)} files")
+            for i, file in enumerate(images, 1):
+                image = Image.open(file).convert("RGB")
+                pages.append(image)
+        else:
+            return "Not a supported input file(s)."
+        
+        for i, page in enumerate(pages):                    # i = 1-based index
+            text = self.recognize_text(model, processor, page) # pass the path, not an Image
+            self.save_file(i, folder_out, text)
+            msg = f"Saved page {i}.txt"
+            print(msg)                                  # still prints to console
             if on_file_saved:
-                on_file_saved(msg)                              # reaches the dialog
+                on_file_saved(msg)                      # ← this reaches the dialog
             if on_progress:
-                on_progress(int(100 * i / len(files)), msg)
+                on_progress(int(100 * i / len(pages)), msg)
 
-        self.result = f"Qwen output for prompt: {image_path}"
+        self.result = f"Qwen output for prompt: {input}"
         return self.result

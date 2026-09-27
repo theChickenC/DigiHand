@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
 
         self.cbSolvers = QComboBox()
         self.cbSolvers.addItems(["Florence", "Moondream", "Qwen"])
-        self.cbSolvers.setCurrentIndex(0)
+        self.cbSolvers.setCurrentIndex(2)
         action_cbSolvers = QWidgetAction(self)
         action_cbSolvers.setDefaultWidget(self.cbSolvers)
         action_cbSolvers.setToolTip("Choose the AI library to solve")
@@ -344,8 +344,8 @@ class MainWindow(QMainWindow):
         dlg = DlgSolver()
         dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath)
         dlg.exec()
-        rst = dlg.getResult()
-        print(rst)
+        # rst = dlg.getResult()
+        # print(rst)
         self.wordWidget.setOutputPath(self.outputPath)
 
 

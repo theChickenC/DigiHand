@@ -27,3 +27,10 @@ class SolverBase():
     def clear_result(self):
         """Shared helper: reset stored result."""
         self.result = None
+
+    def save_file(self, page_num, output_folder, text):
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        output_path = output_folder / f"page_{page_num}.txt"
+        output_path.write_text(text, encoding="utf-8")
