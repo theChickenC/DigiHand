@@ -271,13 +271,16 @@ class WordController(QWidget):
 
     def switchFile(self, fold_in:str, page_index0:int):
         file_path_target = os.path.join(fold_in, f"page_{page_index0}.txt")
-        self.saveChanges(self.curFile)
-        print(f"saving changes to {self.curFile}")
+        if self.wordView.document().isModified() or self.wordView.isDirty():
+            self.saveChanges(self.curFile)
+        # print(f"saving changes to {self.curFile}")
+        
         try:
             with open(file_path_target, "r", encoding="utf-8") as file:
                 f =file.read()
                 self.wordView.clear()
                 self.wordView.setText(f)
+                self.wordView.resetDirty()
         except FileNotFoundError:
             print("missing:", file_path_target)
             self.wordView.clear()
@@ -286,10 +289,8 @@ class WordController(QWidget):
         self.curFile = os.path.join(fold_in, f"page_{page_index0}.txt")
 
     def saveChanges(self, fold_in: str):
-        if self.wordView.document().isModified():
             with open(fold_in, "w", encoding="utf-8") as f:
                 f.write(self.wordView.toPlainText())
-            self.wordView.document().setModified(False)
 
 
     def on_clicked_pbTest(self):
