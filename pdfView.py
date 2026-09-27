@@ -14,8 +14,6 @@ class PdfView(QPdfView):
         # Initialize default font size.
         font = QFont("Times", 12)
         self.setFont(font)
-        # We need to repeat the size to init the current format.
-        # self.setFontPointSize(12)
         self.pdf_doc = pdf_doc
     
     def zoomIn(self):

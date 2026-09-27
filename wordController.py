@@ -8,7 +8,7 @@ from PySide6.QtCore import QSize, Qt, Signal, Slot
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 from wordView import WordView
-from widgets import CustomTextEdit
+from customTextEdit import CustomTextEdit
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -35,6 +35,7 @@ class WordController(QWidget):
         super().__init__()
 
         self.wordView = wordView
+        self.curFile = None
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
@@ -93,8 +94,10 @@ class WordController(QWidget):
         self.fonts.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.fontsize = QComboBox()
         self.fontsize.addItems([str(s) for s in constants.FONT_SIZES])
+        self.fontsize.setCurrentText("18")
         self.layout.addWidget(self.fonts)
         self.layout.addWidget(self.fontsize)
+        self.fontsize.currentTextChanged.connect(lambda s: self.wordView.setFontPointSize(float(s)))
 
         # self.pbBold = QPushButton("Bold", self)
         self.pbBold = QPushButton(self)
@@ -267,18 +270,26 @@ class WordController(QWidget):
 
 
     def switchFile(self, fold_in:str, page_index0:int):
-        
-        file_path = os.path.join(fold_in, f"page_{page_index0}.txt")
+        file_path_target = os.path.join(fold_in, f"page_{page_index0}.txt")
+        self.saveChanges(self.curFile)
+        print(f"saving changes to {self.curFile}")
         try:
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path_target, "r", encoding="utf-8") as file:
                 f =file.read()
                 self.wordView.clear()
                 self.wordView.setText(f)
         except FileNotFoundError:
-            print("missing:", file_path)
+            print("missing:", file_path_target)
             self.wordView.clear()
 
         self.lblPage.setText(f"Page: {page_index0 + 1}")
+        self.curFile = os.path.join(fold_in, f"page_{page_index0}.txt")
+
+    def saveChanges(self, fold_in: str):
+        if self.wordView.document().isModified():
+            with open(fold_in, "w", encoding="utf-8") as f:
+                f.write(self.wordView.toPlainText())
+            self.wordView.document().setModified(False)
 
 
     def on_clicked_pbTest(self):

@@ -10,7 +10,7 @@ from PySide6.QtCore import (
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 from wordView import WordView
-from widgets import CustomTextEdit
+from customTextEdit import CustomTextEdit
 from wordWidget import WordWidget
 
 from PySide6.QtWidgets import (

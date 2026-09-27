@@ -6,10 +6,9 @@ from PySide6.QtGui import QFont, QImage, QTextDocument, QTextCharFormat
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtCore import Signal, Slot
-from widgets import CustomTextEdit
+from customTextEdit import CustomTextEdit
 from wordController import WordController
 from wordView import WordView
-from widgets import CustomTextEdit
 # from pdfController import PdfController
 # from pdfView import PdfView
 # from pdfWidget import PdfWidget
@@ -44,71 +43,14 @@ class WordWidget(QWidget):
         self.layout.addWidget(self.wordController)
         self.layout.addWidget(self.editor)
 
-        # self.pdfWidget = PdfWidget()
-        # self.pdfView = PdfView(self.pdfWidget.pdf_doc)
-        # self.pdfController = PdfController(self.pdfView)
-        
-        # self.update_format()
-
-        #initConnection
-        # self.wordController.undo_action.triggered.connect(self.editor.undo)
-        # self.wordController.redo_action.triggered.connect(self.editor.redo)
-        # self.wordController.cut_action.triggered.connect(self.editor.cut)
-        # self.wordController.copy_action.triggered.connect(self.editor.copy)
-        # self.wordController.paste_action.triggered.connect(self.editor.paste)
-        # self.wordController.select_action.triggered.connect(self.editor.selectAll)
-        # self.wordController.boldToggled.connect(self.editor.set_bold)
-        # self.editor.formatChanged.connect(self._on_format_changed)
-
-        # self.bold_action.toggled.connect(self.update_format)  
-        
-        # self.wordController.wrap_action.triggered.connect(self.edit_toggle_wrap)
-
-        #self.fonts.currentFontChanged.connect(self.editor.setCurrentFont)
-        # # Connect to the signal producing the text of the current selection. Convert the string to float
-        # # and set as the pointsize. We could also use the index + retrieve from FONT_SIZES.
-        # self.fontsize.currentTextChanged.connect(
-        #     lambda s: self.editor.setFontPointSize(float(s))
-        # )
-
-        # self.bold_action.toggled.connect(
-        #     lambda x: self.editor.setFontWeight(
-        #         QFont.Weight.Bold if x else QFont.Weight.Normal
-        #     )
-        # )
-
-        # self.italic_action.toggled.connect(self.editor.setFontItalic)
-        # self.underline_action.toggled.connect(self.editor.setFontUnderline)
-        # self.alignl_action.triggered.connect(
-        #     lambda: self.editor.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # )
-        # self.alignc_action.triggered.connect(
-        #     lambda: self.editor.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # )
-        # self.alignr_action.triggered.connect(
-        #     lambda: self.editor.setAlignment(Qt.AlignmentFlag.AlignRight)
-        # )
-        # self.alignj_action.triggered.connect(
-        #     lambda: self.editor.setAlignment(Qt.AlignmentFlag.AlignJustify)
-        # )
-
-    # def pdfConnections(self):
-    #     print("connecting spinbox")
-    #     self.pdfController.spCurPage.valueChanged.connect(self.switchFile)
 
     def setOutputPath(self, outputPath: str):
         self.outputPath = outputPath
 
     def curPage_changed(self, page_0based):
-        print("page from wordWidget: ", page_0based)
+        # print("page from wordWidget: ", page_0based)
         target_page_0 = page_0based
         self.wordController.switchFile(self.outputPath, target_page_0)
-        
-
-        # total = self.pdfView.pdf_doc.pageCount()
-        # if 0 <= target_page_0 < total:
-        #     nav.jump(target_page_0, QPointF(0, 0))
-
 
 
     # def _on_format_changed(self, fmt: QTextCharFormat):
