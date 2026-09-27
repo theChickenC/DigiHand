@@ -57,9 +57,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.openPath = None
+        self.pdfPath = None
+
         self.settings = QSettings("clairc.com", "DigiHand")
         self.restore_window_state()
-
+        self.openPath = self.settings.value("openPath", "")
 
         # PDF View
         self.pdfWidget = PdfWidget()
@@ -77,8 +80,7 @@ class MainWindow(QMainWindow):
         splitter.setSizes([600, 600]) 
         self.setCentralWidget(splitter)
 
-        self.path = None
-        self.pdfPath = None
+
 
         pid = os.getpid()
         self.outputPath = Path(tempfile.gettempdir()) / "DigiHand" / f"pid_{os.getpid()}"
@@ -202,6 +204,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.settings.setValue("MainWindow/geometry", self.saveGeometry())
+        self.settings.setValue("openPath", self.openPath)
         super().closeEvent(event)
 
 
@@ -218,14 +221,15 @@ class MainWindow(QMainWindow):
     def file_open_source(self):
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Open PDF or JPG file",
-            "",
+            "Open a PDF file",
+            self.openPath,
             "PDF Files (*.pdf);;All Files (*)",
         )
 
         if not path:
             return
 
+        self.openPath = os.path.dirname(path)
         self.pdfPath = path
         self.pdfWidget.setFile(path)
         self.statusBar().showMessage(f"PDF loaded: {self.pdfPath}")
@@ -327,16 +331,19 @@ class MainWindow(QMainWindow):
     def update_title(self):
         self.setWindowTitle(
             "%s - DigiHand"
-            % (os.path.basename(self.path) if self.path else "Untitled")
+            % (os.path.basename(self.pdfPath) if self.pdfPath else "Untitled")
         )
 
     def solve(self):
-        self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
+        # self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
         self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
         idxSolver = self.cbSolvers.currentIndex()
         dlg = DlgSolver2()
-        dlg.start_solver(model=idxSolver, input_type = InputType.IMAGES, input= self.pdfPath, output=self.outputPath)
+        dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath)
         dlg.exec()
+        rst = dlg.getResult()
+        print(rst)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
