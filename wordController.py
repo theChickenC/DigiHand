@@ -28,11 +28,13 @@ from PySide6.QtWidgets import (
 )
 
 class WordController(QWidget):
-
     boldToggled = Signal(bool)
 
-    def __init__(self):
+    def __init__(self, wordView):
         super().__init__()
+
+        self.wordView = wordView
+
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(0)
@@ -135,6 +137,11 @@ class WordController(QWidget):
         self.pbAlignJ.setIcon(QIcon(os.path.join("images", "edit-alignment-justify.png")))
         self.pbAlignJ.setStatusTip("Justify text")
         self.layout.addWidget(self.pbAlignJ)
+
+        self.pbTest = QPushButton(self, "T")
+        self.pbTest.setStatusTip("Test")
+        self.layout.addWidget(self.pbTest)
+        self.pbTest.clicked.connect(self.on_clicked_pbTest)
 
         spacer = QSpacerItem(200, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.layout.addSpacerItem(spacer)
@@ -251,4 +258,24 @@ class WordController(QWidget):
 
 
     def update_format(self):
+        return
+
+
+    def switchFile(self, fold_in:str, page_index:int):
+        file_path = os.path.join(fold_in, f"page_{page_index}.txt")
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                f =file.read()
+                print(f)
+                self.wordView.clear()
+                self.wordView.setText(f)
+                print("page", page_index)
+        except FileNotFoundError:
+            print("missing:", file_path)
+            self.wordView.clear()
+
+
+    def on_clicked_pbTest(self):
+        inputFolder = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
+        self.switchFile(inputFolder, 1)
         return

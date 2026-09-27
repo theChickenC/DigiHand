@@ -21,19 +21,18 @@ from PySide6.QtWidgets import (
     QTextEdit,
 )
 
-class WordView(QTextEdit):
+class WordView(CustomTextEdit):
     # formatChanged = Signal(QTextCharFormat) 
     
     def __init__(self):
         super().__init__()
         self.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
-        # Initialize default font size.
         font = QFont("Times", 12)
         self.setFont(font)
-        # We need to repeat the size to init the current format.
         self.setFontPointSize(12)
 
         # self.currentCharFormatChanged.connect(self.formatChanged)
+
 
     # @Slot(bool)
     def set_bold(self, checked: bool):

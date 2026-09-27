@@ -84,7 +84,7 @@ class SolverFlorence(SolverBase):
         else:
             return "Not a supported input file(s)."
 
-        for i, page in enumerate(pages, 1):
+        for i, page in enumerate(pages):
             text = self.recognize_text(model, processor, page)
             self.save_file(i, folder_out, text)
             msg = f"Saved page {i}.txt"
