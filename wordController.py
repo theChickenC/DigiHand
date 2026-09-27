@@ -267,6 +267,7 @@ class WordController(QWidget):
 
 
     def switchFile(self, fold_in:str, page_index0:int):
+        
         file_path = os.path.join(fold_in, f"page_{page_index0}.txt")
         try:
             with open(file_path, "r", encoding="utf-8") as file:

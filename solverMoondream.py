@@ -52,14 +52,6 @@ class SolverMoondream(SolverBase):
             return result.get("answer", "")
         return str(result)
 
-    def save_file(self, image_path, output_folder, text):
-        image_path = Path(image_path)
-        output_folder = Path(output_folder)
-        output_folder.mkdir(parents=True, exist_ok=True)
-
-        output_path = output_folder / f"{image_path.stem}-Moondream.txt"
-        output_path.write_text(text, encoding="utf-8")
-
     def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
         # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
         # return
@@ -82,7 +74,7 @@ class SolverMoondream(SolverBase):
 
         for i, file in enumerate(files, 1):                    # i = 1-based index
             text = self.recognize_text(model, tokenizer, file) # pass the path, not an Image
-            self.save_file(file, output_folder, text)
+            self.save_file(i, output_folder, text)
             msg = f"Saved {file.stem}.txt"
             print(msg)                                          # console only
             if on_file_saved:
