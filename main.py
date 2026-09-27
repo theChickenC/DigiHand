@@ -48,7 +48,6 @@ from solverQwen import SolverQwen
 from solverMoondream import SolverMoondream
 
 from dlgSolver import DlgSolver
-from dlgSolver2 import DlgSolver2
 
 from digiHandEnums import InputType
 from digiHandTools import DigiHandTools
@@ -70,6 +69,10 @@ class MainWindow(QMainWindow):
 
         self.wordWidget = WordWidget()
         # self.wordWidget.selectionChanged.connect(self.update_format)
+
+
+        self.pdfWidget.pdfController.spCurPage.valueChanged.connect(self.wordWidget.curPage_changed)
+        self.pdfWidget.pdfView.pageNavigator().currentPageChanged.connect(self.wordWidget.curPage_changed)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(self.pdfWidget)
@@ -336,13 +339,14 @@ class MainWindow(QMainWindow):
 
     def solve(self):
         # self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Qwen-2.5"
         idxSolver = self.cbSolvers.currentIndex()
-        dlg = DlgSolver2()
+        dlg = DlgSolver()
         dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath)
         dlg.exec()
         rst = dlg.getResult()
         print(rst)
+        self.wordWidget.setOutputPath(self.outputPath)
 
 
 if __name__ == "__main__":

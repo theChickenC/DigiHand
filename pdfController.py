@@ -11,6 +11,7 @@ from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
 from wordView import WordView
 from widgets import CustomTextEdit
+from wordWidget import WordWidget
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -125,10 +126,10 @@ class PdfController(QWidget):
     def curPage_changed(self, page_1based):
         nav = self.pdfView.pageNavigator()
         target_page_0 = page_1based - 1
-
-        total = self.pdf_doc.pageCount()
+        total = self.pdfView.pdf_doc.pageCount()
         if 0 <= target_page_0 < total:
             nav.jump(target_page_0, QPointF(0, 0))
+
 
     def pdfView_changed(self, page_0based):
         self.spCurPage.blockSignals(True)

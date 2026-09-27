@@ -30,6 +30,8 @@ from PySide6.QtWidgets import (
 class WordWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        # self.outputPath = None
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
@@ -93,6 +95,19 @@ class WordWidget(QWidget):
     # def pdfConnections(self):
     #     print("connecting spinbox")
     #     self.pdfController.spCurPage.valueChanged.connect(self.switchFile)
+
+    def setOutputPath(self, outputPath: str):
+        self.outputPath = outputPath
+
+    def curPage_changed(self, page_1based):
+        print("page from wordWidget: ", page_1based)
+        target_page_0 = page_1based - 1
+        self.wordController.switchFile(self.outputPath, target_page_0)
+        
+
+        # total = self.pdfView.pdf_doc.pageCount()
+        # if 0 <= target_page_0 < total:
+        #     nav.jump(target_page_0, QPointF(0, 0))
 
 
 

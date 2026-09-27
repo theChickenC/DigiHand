@@ -49,7 +49,7 @@ def solver_worker(work_queue, model_idx, input_type, input_dir, output_dir):
     except Exception as exc:
         log(f"Solver crashed: {exc!r}", is_error=True)
 
-class DlgSolver2(QDialog):
+class DlgSolver(QDialog):
     # Signal to receive progress value from subprocess (0~100)
     progressUpdate = Signal(int)
 
