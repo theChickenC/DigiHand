@@ -23,10 +23,11 @@ The initial output:
 - **Text Editor** can change font, font size, and text alignment; supports bold, italics, and underline.
 
 Solver Dialogue:
+
 <img src="/images/readme_example_dialogue.png" alt="solver dialogue example">
 
 
-Edited output:
+<!-- Edited output: -->
 <!-- <img src="/images/readme_example.png" alt="converted page example"> -->
 
 ## Hardware Acceleration
