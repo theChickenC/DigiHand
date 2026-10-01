@@ -18,7 +18,7 @@ The initial output:
 - **Solve PDF** by selecting a model in the dropdown and then clicking the lightning bolt.
 - **Solver Dialogue** provides user on model updates, includes a progress bar.
 - **Synced Scroll** automatically displays the PDF's corresponding output file.
-- **Auto save** detects any changes made, allowing for effortless editing.
+- **Auto Save** detects any changes made, allowing for effortless editing.
 - **PDF Viewer** can zoom in, zoom out, fit original, fit to width, rotate, and jump to any page.
 - **Text Editor** can change font, font size, and text alignment; supports bold, italics, and underline.
 
