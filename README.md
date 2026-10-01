@@ -1,6 +1,6 @@
 <h1 align="center">DigiHand</h1> 
 
-<p align="center">Turning Chicken Scratch to Text, written in <b>PySide6</b>.</p>
+<p align="center">Turning Chicken Scratch to Text, written in <b>Python</b>.</p>
 
 DigiHand is an innovative handwriting digitization platform that is powerful and easy to use, converting scanned PDFs of handwriting into digital text. After selecting a model, utilize its intuitive side-by-side editor to adjust raw output.
 
@@ -43,6 +43,6 @@ CUDA 13.3 requires an NVIDIA Turing-class or newer GPU and an R610 or newer driv
 CPU inference is available for supported workloads but is substantially slower.
 
 ## Models Available:
-Qwen 2.5
-Florence2
-Moondream2
+- Qwen 2.5
+- Florence2
+- Moondream2
