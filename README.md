@@ -10,6 +10,7 @@ DigiHand is an innovative handwriting digitization platform that is powerful and
 ---
 
 The initial output:
+
 <img src="/images/readme_example.png" alt="converted page example">
 
 
