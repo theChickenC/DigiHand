@@ -83,7 +83,7 @@ class SolverQwen(SolverBase):
         return output_text.strip()
 
 
-    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
+    def run(self, input_type: InputType, input: str, output: str, initPage: int, on_file_saved=None, on_progress=None):
         # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
         # return
         import torch
@@ -119,15 +119,15 @@ class SolverQwen(SolverBase):
         else:
             return "Not a supported input file(s)."
         
-        for i, page in enumerate(pages):                    # i = 1-based index
+        for i, page in enumerate(pages[initPage:]):                    # i = 1-based index
             text = self.recognize_text(model, processor, page) # pass the path, not an Image
-            self.save_file(i, folder_out, text)
-            msg = f"Saved page {i}.txt"
+            self.save_file(i+initPage, folder_out, text)
+            msg = f"Saved page {initPage + i}.txt"
             print(msg)                                  # still prints to console
             if on_file_saved:
                 on_file_saved(msg)                      # ← this reaches the dialog
             if on_progress:
-                on_progress(int(100 * i / len(pages)), msg)
+                on_progress(int(100 * i / (len(pages)) + initPage ), msg)
 
         self.result = f"Qwen output for prompt: {input}"
         return self.result

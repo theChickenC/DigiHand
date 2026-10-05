@@ -30,7 +30,7 @@ class WordWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # self.outputPath = None
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//Qwen-2.5"
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview"
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)

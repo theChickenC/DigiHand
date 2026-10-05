@@ -31,6 +31,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QSplitter,
     QWidgetAction,
+    QSpinBox,
+    QAbstractSpinBox,
 )
 from PySide6.QtPrintSupport import QPrintDialog
 from PySide6.QtPdfWidgets import QPdfView
@@ -58,6 +60,7 @@ class MainWindow(QMainWindow):
 
         self.openPath = None
         self.pdfPath = None
+        self.initPage = 0
 
         self.settings = QSettings("clairc.com", "DigiHand")
         self.restore_window_state()
@@ -189,6 +192,17 @@ class MainWindow(QMainWindow):
         action_cbSolvers.setToolTip("Choose the AI library to solve")
         tool_toolbar.addAction(action_cbSolvers)
         # tool_menu.addAction(action_cbSolvers)
+
+
+        self.spInitPage = QSpinBox(self)
+        self.spInitPage.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.spInitPage.setValue(1)
+        action_spInitPage = QWidgetAction(self)
+        action_spInitPage.setDefaultWidget(self.spInitPage)
+        action_spInitPage.setToolTip("Select the Intitial page to Solve")
+        tool_toolbar.addAction(action_spInitPage)
+
+        self.spInitPage.valueChanged.connect(self.setInitPage)
 
         solve_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
         solve_action.setStatusTip("Convert to text")
@@ -338,12 +352,17 @@ class MainWindow(QMainWindow):
             "%s - DigiHand"
             % (os.path.basename(self.pdfPath) if self.pdfPath else "Untitled")
         )
+
+    def setInitPage(self, inputPageNum):
+        self.initPage = inputPageNum - 1
+
+    
     def solve(self):
         # self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//imageJ2//Qwen-2.5"
-        idxSolver = self.cbSolvers.currentIndex()
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview//"
+        idxSolver = self.cbSolvers.currentIndex() 
         dlg = DlgSolver()
-        dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath)
+        dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath, initPage = self.initPage)
         dlg.exec()
         # rst = dlg.getResult()
         # print(rst)

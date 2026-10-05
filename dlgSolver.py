@@ -22,7 +22,7 @@ def _make_solver(idx):
         raise ValueError(f"Unknown solver index: {idx}")
     return cls()
 
-def solver_worker(work_queue, model_idx, input_type, input_dir, output_dir):
+def solver_worker(work_queue, model_idx, input_type, input_dir, output_dir, initPage):
     def log(msg, is_error=False):
         work_queue.put({"type": "log", "msg": msg, "is_error": is_error})
     def progress(value):
@@ -37,7 +37,7 @@ def solver_worker(work_queue, model_idx, input_type, input_dir, output_dir):
         log("Running solver...") 
 
         result = solver.run(
-            input_type, input_dir, output_dir,
+            input_type, input_dir, output_dir, initPage,
             on_file_saved=lambda msg: log(msg),
             on_progress=lambda pct, msg: progress(pct),
         )
@@ -99,7 +99,7 @@ class DlgSolver(QDialog):
 
         layout_main.addLayout(layout_buttons)
 
-    def start_solver(self, model: int, input_type: InputType , input: str, output:str):
+    def start_solver(self, model: int, input_type: InputType , input: str, output:str, initPage: int):
         if self.solver_proc is not None and self.solver_proc.is_alive():
             self.log_message("Solver is already running!", is_error=True)
             return
@@ -110,7 +110,7 @@ class DlgSolver(QDialog):
         
         self.solver_proc = multiprocessing.Process(
             target=solver_worker,
-            args=(self.work_queue, model, input_type, input, output),
+            args=(self.work_queue, model, input_type, input, output, initPage),
             daemon=True,
         )
         if input_type == InputType.PDF:
