@@ -17,6 +17,7 @@ The initial output:
 ## Features
 
 - **Solve PDF** by selecting a model in the dropdown and then clicking the lightning bolt.
+- **Set Initial Page** to pick up where you left off solving
 - **Solver Dialogue** provides user on model updates, includes a progress bar.
 - **Synced Scroll** automatically displays the PDF's corresponding output file.
 - **Auto Save** detects any changes made, allowing for effortless editing.
