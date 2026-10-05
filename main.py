@@ -46,7 +46,8 @@ from pdfWidget import PdfWidget
 from wordWidget import WordWidget
 
 from solverFlorence import SolverFlorence
-from solverQwen import SolverQwen
+from solverQwen2_5 import SolverQwen2_5
+from solverQwen3_5 import SolverQwen3_5
 from solverMoondream import SolverMoondream
 
 from dlgSolver import DlgSolver
@@ -185,8 +186,8 @@ class MainWindow(QMainWindow):
 
 
         self.cbSolvers = QComboBox()
-        self.cbSolvers.addItems(["Florence", "Moondream", "Qwen"])
-        self.cbSolvers.setCurrentIndex(2)
+        self.cbSolvers.addItems(["Florence", "Moondream", "Qwen2.5", "Qwen3.5"])
+        self.cbSolvers.setCurrentIndex(3)
         action_cbSolvers = QWidgetAction(self)
         action_cbSolvers.setDefaultWidget(self.cbSolvers)
         action_cbSolvers.setToolTip("Choose the AI library to solve")

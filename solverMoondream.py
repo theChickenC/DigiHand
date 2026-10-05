@@ -33,7 +33,7 @@ class SolverMoondream(SolverBase):
             "vikhyatk/moondream2",
             revision=MODEL_REVISION,
             trust_remote_code=True,
-            torch_dtype=self.torch_dtype,
+            dtype=self.torch_dtype,
         ).to(self.device)
         self.model.eval()
         tokenizer = AutoTokenizer.from_pretrained(

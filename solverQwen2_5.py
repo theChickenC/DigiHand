@@ -15,7 +15,7 @@ OCR_PROMPT = (
 MIN_PIXELS = 256 * 28 * 28
 MAX_PIXELS = 1280 * 28 * 28
 
-class SolverQwen(SolverBase):
+class SolverQwen2_5(SolverBase):
     def __init__(self):
         super().__init__()
         self.model_name = "Qwen2.5"
@@ -30,7 +30,7 @@ class SolverQwen(SolverBase):
         
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             MODEL_ID,
-            torch_dtype=self.torch_dtype,
+            dtype=self.torch_dtype,
             device_map=self.device,
         )
         self.model.eval()

@@ -9,11 +9,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QProcess, Qt, Signal, QTimer
 from solverFlorence import SolverFlorence
-from solverQwen import SolverQwen
+from solverQwen2_5 import SolverQwen2_5
+from solverQwen3_5 import SolverQwen3_5
 from solverMoondream import SolverMoondream
 
 
-SOLVER_CLASSES = [SolverFlorence, SolverMoondream, SolverQwen]
+SOLVER_CLASSES = [SolverFlorence, SolverMoondream, SolverQwen2_5, SolverQwen3_5]
 
 def _make_solver(idx):
     try:

@@ -14,7 +14,7 @@ class SolverFlorence(SolverBase):
         from transformers import AutoProcessor, AutoModelForCausalLM 
         model = AutoModelForCausalLM.from_pretrained(
             "microsoft/Florence-2-large",
-            torch_dtype= self.torch_dtype,
+            dtype= self.torch_dtype,
             trust_remote_code=True,
             revision="main"  # or a specific commit hash for reproducibility
         ).to(self.device)
@@ -42,7 +42,7 @@ class SolverFlorence(SolverBase):
 
         return parsed_answer[prompt]
 
-    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
+    def run(self, input_type: InputType, input: str, output: str, initPage: int, on_file_saved=None, on_progress=None):
         import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
@@ -76,15 +76,15 @@ class SolverFlorence(SolverBase):
         else:
             return "Not a supported input file(s)."
 
-        for i, page in enumerate(pages):
+        for i, page in enumerate(pages[initPage:]):
             text = self.recognize_text(model, processor, page)
-            self.save_file(i, folder_out, text)
-            msg = f"Saved page {i}.txt"
+            self.save_file(i+initPage, folder_out, text)
+            msg = f"Saved page {i+initPage}.txt"
             print(msg)                                  # still prints to console
             if on_file_saved:
                 on_file_saved(msg)                      # ← this reaches the dialog
             if on_progress:
-                on_progress(int(100 * i / len(pages)), msg)
+                on_progress(int(100 * i / (len(pages)+initPage)), msg)
 
         self.result = f"Florence output for prompt: {input}"
         return self.result
