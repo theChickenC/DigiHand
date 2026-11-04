@@ -46,6 +46,7 @@ CUDA 13.3 requires an NVIDIA Turing-class or newer GPU and an R610 or newer driv
 CPU inference is available for supported workloads but is substantially slower.
 
 ## Models Available:
+- Qwen 3.5
 - Qwen 2.5
 - Florence2
 - Moondream2
