@@ -226,43 +226,6 @@ class WordController(QWidget):
         dlg.setIcon(QMessageBox.Icon.Critical)
         dlg.show()
 
-    def canInsertFromMimeData(self, source):
-        if source.hasImage():
-            return True
-        else:
-            return super().canInsertFromMimeData(source)
-
-    def insertFromMimeData(self, source):
-        cursor = self.textCursor()
-        document = self.document()
-
-        if source.hasUrls():
-            for u in source.urls():
-                file_ext = utils.splitext(str(u.toLocalFile()))
-                if u.isLocalFile() and file_ext in constants.IMAGE_EXTENSIONS:
-                    image = QImage(u.toLocalFile())
-                    document.addResource(
-                        QTextDocument.ResourceType.ImageResource, u, image
-                    )
-                    cursor.insertImage(u.toLocalFile())
-
-                else:
-                    # If we hit a non-image or non-local URL break the loop and fall out
-                    # to the super call & let Qt handle it
-                    break
-
-            else:
-                # If all were valid images, finish here.
-                return
-
-        elif source.hasImage():
-            image = source.imageData()
-            uuid = utils.hexuuid()
-            document.addResource(QTextDocument.ResourceType.ImageResource, uuid, image)
-            cursor.insertImage(uuid)
-            return
-
-        super().insertFromMimeData(source)
 
 
     def update_format(self):
@@ -270,30 +233,32 @@ class WordController(QWidget):
 
 
     def switchFile(self, fold_in:str, page_index0:int):
+        if not fold_in:
+            return
         file_path_target = os.path.join(fold_in, f"page_{page_index0}.txt")
-        if self.wordView.document().isModified() or self.wordView.isDirty():
+        # only save when there is a real previous file; the first page switch
+        # has curFile None and saving would raise TypeError
+        if (self.wordView.document().isModified() or self.wordView.isDirty()) and self.curFile:
             self.saveChanges(self.curFile)
-        # print(f"saving changes to {self.curFile}")
-        
+
         try:
             with open(file_path_target, "r", encoding="utf-8") as file:
-                f =file.read()
-                self.wordView.clear()
-                self.wordView.setText(f)
-                self.wordView.resetDirty()
+                content = file.read()
+            self.wordView.clear()
+            self.wordView.setText(content)
         except FileNotFoundError:
             print("missing:", file_path_target)
             self.wordView.clear()
+        # clear()/setText() re-mark the document dirty; reset it here or the
+        # next page switch silently overwrites the previous txt with empties
+        self.wordView.resetDirty()
+        self.wordView.document().setModified(False)
 
         self.lblPage.setText(f"Page: {page_index0 + 1}")
-        self.curFile = os.path.join(fold_in, f"page_{page_index0}.txt")
+        self.curFile = file_path_target
 
     def saveChanges(self, fold_in: str):
             with open(fold_in, "w", encoding="utf-8") as f:
                 f.write(self.wordView.toPlainText())
 
 
-    def on_clicked_pbTest(self):
-        inputFolder = "D://WelSimLLC-github//DigiHand//output//imageJ2//Florence-2"
-        self.switchFile(inputFolder, 1)
-        return

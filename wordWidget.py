@@ -29,8 +29,7 @@ from PySide6.QtWidgets import (
 class WordWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.outputPath = None
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview"
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview"  # set via setOutputPath() after a solve run
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
@@ -49,8 +48,9 @@ class WordWidget(QWidget):
 
     def curPage_changed(self, page_0based):
         # print("page from wordWidget: ", page_0based)
-        target_page_0 = page_0based
-        self.wordController.switchFile(self.outputPath, target_page_0)
+        if not self.outputPath:
+            return
+        self.wordController.switchFile(str(self.outputPath), page_0based)
 
 
     # def _on_format_changed(self, fmt: QTextCharFormat):
@@ -79,82 +79,7 @@ class WordWidget(QWidget):
     #     # nav.jumpToPage(0)
 
 
-    def canInsertFromMimeData(self, source):
-        if source.hasImage():
-            return True
-        else:
-            return super().canInsertFromMimeData(source)
-
-    def insertFromMimeData(self, source):
-        cursor = self.textCursor()
-        document = self.document()
-
-        if source.hasUrls():
-            for u in source.urls():
-                file_ext = utils.splitext(str(u.toLocalFile()))
-                if u.isLocalFile() and file_ext in constants.IMAGE_EXTENSIONS:
-                    image = QImage(u.toLocalFile())
-                    document.addResource(
-                        QTextDocument.ResourceType.ImageResource, u, image
-                    )
-                    cursor.insertImage(u.toLocalFile())
-
-                else:
-                    # If we hit a non-image or non-local URL break the loop and fall out
-                    # to the super call & let Qt handle it
-                    break
-
-            else:
-                # If all were valid images, finish here.
-                return
-
-        elif source.hasImage():
-            image = source.imageData()
-            uuid = utils.hexuuid()
-            document.addResource(QTextDocument.ResourceType.ImageResource, uuid, image)
-            cursor.insertImage(uuid)
-            return
-
-        super().insertFromMimeData(source)
 
         
 
 
-    def update_format(self):
-         """
-         Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
-         toolbars/etc. in sync with the current edit state.
-         :return:
-         """
-         # Disable signals for all format widgets, so changing values here does not trigger further formatting.
-         self.block_signals(self._format_actions, True)
- 
-         self.fonts.setCurrentFont(self.editor.currentFont())
-         # Nasty, but we get the font-size as a float but want it was an int
-         self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
- 
-         self.italic_action.setChecked(self.editor.fontItalic())
-         self.underline_action.setChecked(self.editor.fontUnderline())
-            
- 
-         self.alignl_action.setChecked(
-             self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
-         )
-         self.alignc_action.setChecked(
-             self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
-         )
-         self.alignr_action.setChecked(
-             self.editor.alignment() == Qt.AlignmentFlag.AlignRight
-         )
-         self.alignj_action.setChecked(
-             self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
-         )
- 
-         self.block_signals(self._format_actions, False)
-
-    def block_signals(self, objects, b):
-        for o in objects:
-            o.blockSignals(b)
-
-    def update_format(self):
-        return

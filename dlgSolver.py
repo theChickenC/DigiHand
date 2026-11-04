@@ -166,6 +166,9 @@ class DlgSolver(QDialog):
         if self.solver_proc is not None and self.solver_proc.is_alive():
             self.log_message("Killing solver process...", is_error=True)
             self.solver_proc.terminate()
+            self.solver_proc.join(3)
+            if self.solver_proc.is_alive():
+                self.solver_proc.kill()
         else:
             self.log_message("No running solver process.")
 
@@ -174,5 +177,9 @@ class DlgSolver(QDialog):
             self.log_message("Warning: solver still running! Closing now will terminate it.",
                              is_error=True)
             self.solver_proc.terminate()
+            self.solver_proc.join(3)
+            if self.solver_proc.is_alive():
+                self.solver_proc.kill()
+        self.timer.stop()
         super().reject()
 

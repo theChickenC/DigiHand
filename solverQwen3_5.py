@@ -132,9 +132,8 @@ class SolverQwen3_5(SolverBase):
             print(msg)
             if on_file_saved:
                 on_file_saved(msg)
-            if on_progress:
-                total_index = i + initPage
-                progress_pct = int(100 * total_index / len(pages))
+            if on_progress and pages[initPage:]:
+                progress_pct = min(100, int(100 * (i + 1) / len(pages[initPage:])))
                 on_progress(progress_pct, msg)
         self.result = f"Qwen3.5-4B output for prompt: {input}"
         return self.result

@@ -1,1 +1,9 @@
-PyQt6>=5.6
+PySide6
+pymupdf
+Pillow
+pypdf
+# model stack (heavy; only needed for the solvers)
+torch
+transformers
+qwen-vl-utils
+# optional: bitsandbytes (Qwen3.5 4-bit path)

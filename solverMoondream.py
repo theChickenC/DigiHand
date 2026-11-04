@@ -36,14 +36,15 @@ class SolverMoondream(SolverBase):
             dtype=self.torch_dtype,
         ).to(self.device)
         self.model.eval()
-        tokenizer = AutoTokenizer.from_pretrained(
+        # assign to self.tokenizer, otherwise the cache check above never hits
+        # and the tokenizer is rebuilt (and the model reloaded) on every call
+        self.tokenizer = AutoTokenizer.from_pretrained(
             "vikhyatk/moondream2", revision=MODEL_REVISION
         )
         return self.model, self.tokenizer
 
-    def recognize_text(self, model, tokenizer, image_file_path: str) -> str:
+    def recognize_text(self, model, tokenizer, image) -> str:
         import torch
-        image = Image.open(image_file_path).convert("RGB")
 
         with torch.no_grad():
             result = model.query(image, OCR_PROMPT)
@@ -52,35 +53,48 @@ class SolverMoondream(SolverBase):
             return result.get("answer", "")
         return str(result)
 
-    def run(self, input_type: InputType, input: str, output: str, on_file_saved=None, on_progress=None):
-        # print(f"Running {self.model_name} | input: {image_path}, output: {output}")
-        # return
+    def run(self, input_type: InputType, input: str, output: str, initPage: int,
+            on_file_saved=None, on_progress=None):
         import torch
+        from digiHandTools import DigiHandTools
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-        on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
+        if on_file_saved:
+            on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
 
-        folder = Path(image_path)
+        folder_in = Path(input)
         output_folder = Path(output)
+        output_folder.mkdir(parents=True, exist_ok=True)
         model, tokenizer = self.get_model_and_tokenizer()
 
-        files = [f for f in folder.iterdir()
-                if f.suffix.lower() in ('.png', '.jpg', '.jpeg')]   # ← see #2
-        files.sort()
-        if not files:
-            print(f"WARNING: no images found in {folder}")
-        if on_progress and files:
-            on_progress(5, f"found {len(files)} files")
+        pages = []
+        if input_type == InputType.PDF:
+            pages = DigiHandTools.pdf_pages_to_images(folder_in)
+            if not pages:
+                print(f"WARNING: no images converted from {folder_in}")
+        elif input_type == InputType.IMAGES:
+            images = sorted(
+                f for f in folder_in.iterdir()
+                if f.suffix.lower() in (".png", ".jpg", ".jpeg")
+            )
+            for file in images:
+                pages.append(Image.open(file).convert("RGB"))
+        else:
+            return "Not a supported input file(s)."
 
-        for i, file in enumerate(files, 1):                    # i = 1-based index
-            text = self.recognize_text(model, tokenizer, file) # pass the path, not an Image
-            self.save_file(i, output_folder, text)
-            msg = f"Saved {file.stem}.txt"
-            print(msg)                                          # console only
+        if on_progress and pages:
+            on_progress(5, f"found {len(pages)} files")
+
+        todo = pages[initPage:]
+        for i, page in enumerate(todo):
+            text = self.recognize_text(model, tokenizer, page)
+            self.save_file(i + initPage, output_folder, text)
+            msg = f"Saved page {initPage + i}.txt"
+            print(msg)
             if on_file_saved:
-                on_file_saved(msg)                              # reaches the dialog
-            if on_progress:
-                on_progress(int(100 * i / len(files)), msg)
+                on_file_saved(msg)
+            if on_progress and todo:
+                on_progress(min(100, int(100 * (i + 1) / len(todo))), msg)
 
         self.result = f"Moondream output for prompt: {input}"
         return self.result

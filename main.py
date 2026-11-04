@@ -51,6 +51,7 @@ from solverQwen3_5 import SolverQwen3_5
 from solverMoondream import SolverMoondream
 
 from dlgSolver import DlgSolver
+from txt2epub import txt_dir_to_epub
 
 from digiHandEnums import InputType
 from digiHandTools import DigiHandTools
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow):
 
         self.openPath = None
         self.pdfPath = None
+        self.path = None      # current text file edited by wordWidget
         self.initPage = 0
 
         self.settings = QSettings("clairc.com", "DigiHand")
@@ -72,6 +74,7 @@ class MainWindow(QMainWindow):
         # self.pdfViewer.selectionChanged.connect(self.update_format)
 
         self.wordWidget = WordWidget()
+        self.editor = self.wordWidget.editor
         # self.wordWidget.selectionChanged.connect(self.update_format)
 
 
@@ -211,6 +214,12 @@ class MainWindow(QMainWindow):
         tool_menu.addAction(solve_action)
         tool_toolbar.addAction(solve_action)
 
+        epub_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "To ePub", self,)
+        epub_action.setStatusTip("Convert all generated txt files to an ePub (dated files start a new chapter)")
+        epub_action.triggered.connect(self.export_epub)
+        tool_menu.addAction(epub_action)
+        tool_toolbar.addAction(epub_action)
+
         # Initialize.
         self.update_title()
         self.show()
@@ -251,8 +260,11 @@ class MainWindow(QMainWindow):
 
         self.openPath = os.path.dirname(path)
         self.pdfPath = path
-        self.pdfWidget.setFile(path)
-        self.statusBar().showMessage(f"PDF loaded: {self.pdfPath}")
+        result = self.pdfWidget.setFile(path)
+        if result is not None:
+            self.statusBar().showMessage(f"Failed to load PDF: {result}")
+        else:
+            self.statusBar().showMessage(f"PDF loaded: {self.pdfPath}")
         # self.split_pdf_into_pages()
 
     def set_output_folder(self):
@@ -260,9 +272,11 @@ class MainWindow(QMainWindow):
         if not output_folder:
             return
 
-    def split_pdf_into_pages(self):    
+    def split_pdf_into_pages(self, output_folder=None):
+        if not self.pdfPath:
+            return 0
         reader = PdfReader(self.pdfPath)
-        output_folder = Path(output_folder)
+        output_folder = Path(output_folder or self.outputPath)
         output_folder.mkdir(parents=True, exist_ok=True)
 
         for i, page in enumerate(reader.pages, 1):
@@ -279,11 +293,15 @@ class MainWindow(QMainWindow):
             self,
             "Open file",
             "",
+            self.openPath,
             "HTML documents (*.html);Text documents (*.txt);All files (*.*)",
         )
 
+        if not path:
+            return
+
         try:
-            with open(path, "rU") as f:
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
                 text = f.read()
 
         except Exception as e:
@@ -308,7 +326,7 @@ class MainWindow(QMainWindow):
         )
 
         try:
-            with open(self. path, "w") as f:
+            with open(self.path, "w", encoding="utf-8") as f:
                 f.write(text)
 
         except Exception as e:
@@ -333,7 +351,7 @@ class MainWindow(QMainWindow):
         )
 
         try:
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write(text)
 
         except Exception as e:
@@ -358,12 +376,31 @@ class MainWindow(QMainWindow):
         self.initPage = inputPageNum - 1
 
     
+    def export_epub(self):
+        # default to the current session's solve output if it has txt files
+        start = ""
+        if self.outputPath and any(Path(self.outputPath).glob("*.txt")):
+            start = str(self.outputPath)
+        elif self.openPath:
+            start = self.openPath
+        folder = QFileDialog.getExistingDirectory(
+            self, "Choose folder of generated txt files to convert", start)
+        if not folder:
+            return
+        try:
+            epub, log = txt_dir_to_epub(Path(folder))
+        except Exception as e:
+            self.dialog_critical(f"ePub conversion failed: {e}")
+            return
+        self.statusBar().showMessage(f"ePub written: {epub}   (chapter log: {log})", 10000)
+
     def solve(self):
-        # self.pdfPath = "D://WelSimLLC-github//DigiHand//data//imageJ2"
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview//"
-        idxSolver = self.cbSolvers.currentIndex() 
+        if not self.pdfPath:
+            self.dialog_critical("Open a source PDF first.")
+            return
+        idxSolver = self.cbSolvers.currentIndex()
         dlg = DlgSolver()
-        dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=self.outputPath, initPage = self.initPage)
+        dlg.start_solver(model=idxSolver, input_type = InputType.PDF, input= self.pdfPath, output=str(self.outputPath), initPage = self.initPage)
         dlg.exec()
         # rst = dlg.getResult()
         # print(rst)
