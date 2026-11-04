@@ -1,35 +1,14 @@
-import constants
-import os
-import utils
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from PySide6.QtGui import QFont, QImage, QTextDocument, QTextCharFormat
-from PySide6.QtPdfWidgets import QPdfView
-from PySide6.QtPdf import QPdfDocument
-from PySide6.QtCore import Signal, Slot
-from customTextEdit import CustomTextEdit
-from wordController import WordController
 from wordView import WordView
-# from pdfController import PdfController
-# from pdfView import PdfView
-# from pdfWidget import PdfWidget
-
-from PySide6.QtWidgets import (
-    QApplication,
-    QComboBox,
-    QFileDialog,
-    QFontComboBox,
-    QMainWindow,
-    QMessageBox,
-    QStatusBar,
-    QToolBar,
-    QVBoxLayout,
-    QWidget,
-)
+from wordController import WordController
 
 class WordWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview"  # set via setOutputPath() after a solve run
+        # None until a solve run sets it; a hardcoded dev-machine path here
+        # would leak old journal data into any new session
+        self.outputPath = None
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)
@@ -43,8 +22,8 @@ class WordWidget(QWidget):
         self.layout.addWidget(self.editor)
 
 
-    def setOutputPath(self, outputPath: str):
-        self.outputPath = outputPath
+    def setOutputPath(self, outputPath):
+        self.outputPath = outputPath or None
 
     def curPage_changed(self, page_0based):
         # print("page from wordWidget: ", page_0based)

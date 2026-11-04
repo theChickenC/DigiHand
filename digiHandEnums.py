@@ -1,9 +1,11 @@
 from enum import Enum
 
 class SolverType(Enum):
+    # Keep in sync with DlgSolver.SOLVER_CLASSES and the combo box in main.py
     FLORENCE  = 0
-    MOONBEAM  = 1
-    QWEN      = 2
+    MOONDREAM = 1
+    QWEN2_5   = 2
+    QWEN3_5   = 3
 
 class InputType(Enum):
     PDF = 0

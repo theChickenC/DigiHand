@@ -1,10 +1,4 @@
-import os
-import pymupdf
-from pathlib import Path
-from PIL import Image
 from solverBase import SolverBase
-from digiHandEnums import InputType
-from digiHandTools import DigiHandTools
 
 MODEL_ID = "Qwen/Qwen3.5-4B"
 OCR_PROMPT = (
@@ -13,6 +7,8 @@ OCR_PROMPT = (
     "Do not summarize, translate, or correct spelling. "
     "Output only the transcription, nothing else."
 )
+MIN_PIXELS = 256 * 28 * 28
+MAX_PIXELS = 1280 * 28 * 28
 
 
 class SolverQwen3_5(SolverBase):
@@ -21,43 +17,52 @@ class SolverQwen3_5(SolverBase):
         self.model_name = "Qwen3.5-4B"
         self.model = None
         self.processor = None
-        # Initialize device + dtype HERE so they always exist
-        import torch
-        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-    def get_model_and_processor(self):
+    def load_model(self):
         import torch
         if self.model is not None and self.processor is not None:
-            return self.model, self.processor
+            return
 
         # Qwen3.5 is a vision-language model, so it must be loaded with
         # AutoModelForImageTextToText (AutoModelForCausalLM drops the vision side).
-        from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
+        from transformers import AutoModelForImageTextToText, AutoProcessor
 
-        # 4bit quantization config for RTX2070 Super
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-        )
+        # 4-bit quantization keeps this on an RTX 2070 Super, but
+        # bitsandbytes is an optional dependency: without it, fall back to
+        # fp16 instead of crashing the whole solve.
+        quantization_config = None
+        try:
+            import bitsandbytes  # noqa: F401
+            from transformers import BitsAndBytesConfig
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+            )
+        except ImportError:
+            print("WARNING: bitsandbytes not installed; loading Qwen3.5 "
+                  "unquantized (needs more VRAM). pip install bitsandbytes for the 4-bit path.")
+
+        load_kwargs = {"device_map": self.device}
+        if quantization_config is not None:
+            load_kwargs["quantization_config"] = quantization_config
+        else:
+            load_kwargs["dtype"] = self.torch_dtype
 
         self.model = AutoModelForImageTextToText.from_pretrained(
-            MODEL_ID,
-            quantization_config=bnb_config,
-            dtype=self.torch_dtype,
-            device_map=self.device,
-        )
+            MODEL_ID, **load_kwargs)
         self.model.eval()
 
-        # Default processor settings. If you run out of VRAM, limit image size,
-        # e.g. AutoProcessor.from_pretrained(MODEL_ID, min_pixels=256*28*28,
-        # max_pixels=1280*28*28) -- check the model card for the exact kwargs.
-        self.processor = AutoProcessor.from_pretrained(MODEL_ID)
-        return self.model, self.processor
+        # Limit image resolution to keep VRAM in check; if this processor
+        # build rejects the kwargs, retry with defaults rather than failing.
+        try:
+            self.processor = AutoProcessor.from_pretrained(
+                MODEL_ID, min_pixels=MIN_PIXELS, max_pixels=MAX_PIXELS)
+        except TypeError:
+            self.processor = AutoProcessor.from_pretrained(MODEL_ID)
 
-    def recognize_text(self, model, processor, image) -> str:
+    def recognize_page(self, image) -> str:
         import torch
         messages = [
             {
@@ -68,13 +73,13 @@ class SolverQwen3_5(SolverBase):
                 ],
             }
         ]
-        text_prompt = processor.apply_chat_template(
+        text_prompt = self.processor.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True,
             enable_thinking=False,
         )
-        inputs = processor(
+        inputs = self.processor(
             text=[text_prompt],
             images=[image],
             padding=True,
@@ -83,57 +88,13 @@ class SolverQwen3_5(SolverBase):
 
         with torch.no_grad():
             # Pass ALL inputs (including pixel_values etc.) so the model sees the image
-            generated_ids = model.generate(**inputs, max_new_tokens=2048)
+            generated_ids = self.model.generate(**inputs, max_new_tokens=2048)
 
         # generate() returns prompt + new tokens; strip the prompt before decoding
         trimmed = generated_ids[:, inputs["input_ids"].shape[1]:]
-        output_text = processor.batch_decode(
+        output_text = self.processor.batch_decode(
             trimmed,
             skip_special_tokens=True,
             clean_up_tokenization_spaces=False,
         )[0]
         return output_text.strip()
-
-    def run(self, input_type: InputType, input: str, output: str, initPage: int, on_file_saved=None, on_progress=None):
-        if on_file_saved:
-            on_file_saved(f"Using device: {self.device} with dtype: {self.torch_dtype}")
-        folder_in = Path(input)
-        folder_out = Path(output)
-        folder_out.mkdir(parents=True, exist_ok=True)
-        model, processor = self.get_model_and_processor()
-        pages = []
-        if input_type == InputType.PDF:
-            pages = DigiHandTools.pdf_pages_to_images(folder_in)
-            if not pages:
-                print(f"WARNING: no images converted from {folder_in}")
-            if on_progress and pages:
-                on_progress(5, f"found {len(pages)} files")
-        elif input_type == InputType.IMAGES:
-            # sorted() so pages come out in a stable, predictable order
-            images = sorted(
-                f for f in folder_in.iterdir()
-                if f.suffix.lower() in ('.png', '.jpg', '.jpeg')
-            )
-            print(images)
-            if not images:
-                print(f"WARNING: no images found in {folder_in}")
-            if on_progress and images:
-                on_progress(5, f"found {len(images)} files")
-            for file in images:
-                image = Image.open(file).convert("RGB")
-                pages.append(image)
-        else:
-            return "Not a supported input file(s)."
-
-        for i, page in enumerate(pages[initPage:]):
-            text = self.recognize_text(model, processor, page)
-            self.save_file(i + initPage, folder_out, text)
-            msg = f"Saved page {initPage + i}.txt"
-            print(msg)
-            if on_file_saved:
-                on_file_saved(msg)
-            if on_progress and pages[initPage:]:
-                progress_pct = min(100, int(100 * (i + 1) / len(pages[initPage:])))
-                on_progress(progress_pct, msg)
-        self.result = f"Qwen3.5-4B output for prompt: {input}"
-        return self.result

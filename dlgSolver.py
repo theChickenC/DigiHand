@@ -1,13 +1,11 @@
-import sys
-import time
 import queue
 import multiprocessing
 from digiHandEnums import InputType
 from PySide6.QtWidgets import (
-    QApplication, QDialog, QVBoxLayout, QHBoxLayout,
+    QDialog, QVBoxLayout, QHBoxLayout,
     QTextEdit, QProgressBar, QPushButton, QLabel
 )
-from PySide6.QtCore import QProcess, Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer
 from solverFlorence import SolverFlorence
 from solverQwen2_5 import SolverQwen2_5
 from solverQwen3_5 import SolverQwen3_5
@@ -162,6 +160,16 @@ class DlgSolver(QDialog):
     def on_progress_update(self, value):
         self.progressBar.setValue(max(0, min(100, value)))
 
+    def _terminate_worker(self):
+        """Stop the solver subprocess if it is still running."""
+        if self.solver_proc is not None and self.solver_proc.is_alive():
+            self.log_message("Terminating solver process...", is_error=True)
+            self.solver_proc.terminate()
+            self.solver_proc.join(3)
+            if self.solver_proc.is_alive():
+                self.solver_proc.kill()
+        self.solver_proc = None
+
     def on_kill_process(self):
         if self.solver_proc is not None and self.solver_proc.is_alive():
             self.log_message("Killing solver process...", is_error=True)
@@ -173,13 +181,14 @@ class DlgSolver(QDialog):
             self.log_message("No running solver process.")
 
     def reject(self):
-        if self.solver_proc is not None and self.solver_proc.is_alive():
-            self.log_message("Warning: solver still running! Closing now will terminate it.",
-                             is_error=True)
-            self.solver_proc.terminate()
-            self.solver_proc.join(3)
-            if self.solver_proc.is_alive():
-                self.solver_proc.kill()
+        self._terminate_worker()
         self.timer.stop()
         super().reject()
+
+    def closeEvent(self, event):
+        # the title-bar X does NOT go through reject(): without this the
+        # solver subprocess keeps running with no dialog polling it
+        self._terminate_worker()
+        self.timer.stop()
+        super().closeEvent(event)
 
