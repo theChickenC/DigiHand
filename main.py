@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import constants
 import utils
 import multiprocessing
@@ -54,6 +55,7 @@ from solverQwen3_5 import SolverQwen3_5
 from solverMoondream import SolverMoondream
 
 from dlgSolver import DlgSolver
+from dlgEpub import DlgEpub
 from txt2epub import txt_dir_to_epub
 
 from digiHandEnums import InputType
@@ -77,6 +79,9 @@ class MainWindow(QMainWindow):
         self.settings = QSettings("clairc.com", "DigiHand")
         self.restore_window_state()
         self.openPath = self.settings.value("openPath", "")
+        # per-purpose last-used dialog folders ("stay where I was")
+        self.projectDir = str(self.settings.value("projectDir", "") or "")
+        self.epubFolder = str(self.settings.value("epubFolder", "") or "")
 
         # PDF View
         self.pdfWidget = PdfWidget()
@@ -115,6 +120,7 @@ class MainWindow(QMainWindow):
         self.projectPath = None      # path of the open .digihand.json, if any
         self.epubFiles = []          # epubs generated this session/project
         self.projectDirty = False    # unsaved project changes
+        self.epubOptions = self._load_epub_options()  # remembered ePub settings
 
         self.wordWidget.editor.dirtyChanged.connect(self.update_title)
 
@@ -268,7 +274,7 @@ class MainWindow(QMainWindow):
         tool_menu.addAction(solve_action)
         tool_toolbar.addAction(solve_action)
 
-        epub_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "To ePub", self,)
+        epub_action = QAction(QIcon(os.path.join("images", "epub_book.svg")), "To ePub", self,)
         epub_action.setStatusTip("Convert all generated txt files to an ePub (dated files start a new chapter)")
         epub_action.triggered.connect(self.export_epub)
         tool_menu.addAction(epub_action)
@@ -324,6 +330,7 @@ class MainWindow(QMainWindow):
             return
 
         self.openPath = os.path.dirname(path)
+        self.settings.setValue("openPath", self.openPath)
         self.pdfPath = path
         self._mark_dirty()
         result = self.pdfWidget.setFile(path)
@@ -509,7 +516,25 @@ class MainWindow(QMainWindow):
             epubs=self.epubFiles,
             geometry_hex=geom,
             project_dir=Path(self.projectPath).parent,
+            epub_options=self.epubOptions,
         )
+
+    def _remember_dir(self, key: str, path) -> str:
+        """Persist the folder a dialog last used, so it reopens 'where I was'."""
+        d = str(Path(path))
+        self.settings.setValue(key, d)
+        if key == "projectDir":
+            self.projectDir = d
+        elif key == "epubFolder":
+            self.epubFolder = d
+        return d
+
+    def _existing_dir(self, *cands) -> str:
+        """First candidate that is an actual directory (dialog start folder)."""
+        for c in cands:
+            if c and Path(str(c)).is_dir():
+                return str(c)
+        return ""
 
     def save_project(self):
         if not self.projectPath:
@@ -521,6 +546,7 @@ class MainWindow(QMainWindow):
             return
         self.projectDirty = False
         self._remember_recent(self.projectPath)
+        self._remember_dir("projectDir", self.projectPath.parent)
         self.statusBar().showMessage(f"Project saved: {self.projectPath}", 5000)
         self.update_title()
 
@@ -528,6 +554,8 @@ class MainWindow(QMainWindow):
         suggested = str(self.projectPath) if self.projectPath else ""
         if not suggested and self.pdfPath:
             suggested = str(Path(self.pdfPath).with_suffix(PROJECT_EXTENSION))
+        if not suggested and self.projectDir:
+            suggested = str(Path(self.projectDir) / ("project" + PROJECT_EXTENSION))
         path, _ = QFileDialog.getSaveFileName(
             self, "Save project as", suggested,
             f"DigiHand project (*{PROJECT_EXTENSION})")
@@ -552,11 +580,11 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("New project. Open a source PDF to begin.", 5000)
 
     def open_project_dialog(self):
-        start = ""
-        if self.projectPath:
-            start = str(self.projectPath.parent)
-        elif self.openPath:
-            start = self.openPath
+        # reopen where the last project was saved/opened, not at home
+        start = self._existing_dir(
+            self.projectPath.parent if self.projectPath else "",
+            self.projectDir,
+            self.openPath)
         path, _ = QFileDialog.getOpenFileName(
             self, "Open DigiHand project", start,
             f"DigiHand project (*{PROJECT_EXTENSION});;All Files (*)")
@@ -571,7 +599,10 @@ class MainWindow(QMainWindow):
             return
 
         self.projectPath = Path(path)
+        self._remember_dir("projectDir", self.projectPath.parent)
         self.epubFiles = list(state.get("epubs", []))
+        if state.get("epub_options"):
+            self.epubOptions = state["epub_options"]
 
         geom = state.get("geometry")
         if geom:
@@ -653,22 +684,47 @@ class MainWindow(QMainWindow):
             self.menuRecent.addAction(empty)
 
     
+    def _load_epub_options(self) -> dict:
+        """ePub options remembered from previous exports (QSettings JSON blob)."""
+        raw = self.settings.value("epubOptions", "")
+        if isinstance(raw, dict):
+            return raw
+        if isinstance(raw, str) and raw.strip():
+            try:
+                loaded = json.loads(raw)
+                if isinstance(loaded, dict):
+                    return loaded
+            except json.JSONDecodeError:
+                pass
+        return {}
+
     def export_epub(self):
-        # default to the current session's solve output if it has txt files
-        start = ""
-        if self.outputPath and any(Path(self.outputPath).glob("*.txt")):
-            start = str(self.outputPath)
-        elif self.openPath:
-            start = self.openPath
+        # reopen where the last ePub was exported from; else the current
+        # session's solve output if it has txt files
+        start = self._existing_dir(
+            self.epubFolder,
+            str(self.outputPath) if (self.outputPath
+                                     and any(Path(self.outputPath).glob("*.txt"))) else "",
+            self.openPath)
         folder = QFileDialog.getExistingDirectory(
             self, "Choose folder of generated txt files to convert", start)
         if not folder:
             return
+        self._remember_dir("epubFolder", folder)
+        defaults = dict(self.epubOptions)
+        if not defaults.get("title"):
+            defaults["title"] = Path(folder).name
+        dlg = DlgEpub(self, defaults, cover_start=folder)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        opts = dlg.get_options()
         try:
-            epub, log = txt_dir_to_epub(Path(folder))
+            epub, log = txt_dir_to_epub(Path(folder), options=opts)
         except Exception as e:
             self.dialog_critical(f"ePub conversion failed: {e}")
             return
+        self.epubOptions = opts
+        self.settings.setValue("epubOptions", json.dumps(opts, ensure_ascii=False))
         self.epubFiles.append(str(epub))
         self._mark_dirty()
         self.statusBar().showMessage(f"ePub written: {epub}   (chapter log: {log})", 10000)

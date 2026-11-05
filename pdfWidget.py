@@ -40,6 +40,8 @@ class PdfWidget(QWidget):
         if load_result != QPdfDocument.Error.None_:
             return load_result  # caller surfaces the error on its status bar
 
+        self.pdfView.resetRotation()  # rotation state is per-file
+        self.pdfView.sourcePath = str(path)
         self.pdfView.setDocument(self.pdf_doc)
         self.pdfView.setPageMode(QPdfView.PageMode.MultiPage)
         # page spin box default max is 99 — keep it in sync with the document

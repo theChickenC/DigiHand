@@ -3,7 +3,7 @@ import utils
 import os
 import sys
 
-from PySide6.QtGui import QAction, QActionGroup, QFont, QIcon, QKeySequence, QImage, QTextDocument
+from PySide6.QtGui import QAction, QActionGroup, QFont, QIcon, QKeySequence, QImage, QShortcut, QTextDocument
 from PySide6.QtCore import QSize, Qt, Signal, Slot
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtPdf import QPdfDocument
@@ -29,8 +29,6 @@ from PySide6.QtWidgets import (
 )
 
 class WordController(QWidget):
-    boldToggled = Signal(bool)
-
     def __init__(self, wordView):
         super().__init__()
 
@@ -102,21 +100,36 @@ class WordController(QWidget):
         # self.pbBold = QPushButton("Bold", self)
         self.pbBold = QPushButton(self)
         self.pbBold.setIcon(QIcon(os.path.join("images", "edit-bold.png")))
-        self.pbBold.setStatusTip("Bold")
+        self.pbBold.setStatusTip("Bold (Ctrl+B)")
+        self.pbBold.setCheckable(True)
         self.layout.addWidget(self.pbBold)
-        self.pbBold.clicked.connect(self.on_clicked_bold)
+        self.pbBold.clicked.connect(self.toggle_bold)
 
         # self.pbItalic = QPushButton("Italic", self)
         self.pbItalic = QPushButton(self)
         self.pbItalic.setIcon(QIcon(os.path.join("images", "edit-italic.png")))
-        self.pbItalic.setStatusTip("Italic")
+        self.pbItalic.setStatusTip("Italic (Ctrl+I)")
+        self.pbItalic.setCheckable(True)
         self.layout.addWidget(self.pbItalic)
+        self.pbItalic.clicked.connect(self.toggle_italic)
 
         # self.pbUnderline = QPushButton("Underline", self)
         self.pbUnderline = QPushButton(self)
         self.pbUnderline.setIcon(QIcon(os.path.join("images", "edit-underline.png")))
-        self.pbUnderline.setStatusTip("Underline")
+        self.pbUnderline.setStatusTip("Underline (Ctrl+U)")
+        self.pbUnderline.setCheckable(True)
         self.layout.addWidget(self.pbUnderline)
+        self.pbUnderline.clicked.connect(self.toggle_underline)
+
+        # Ctrl+B / Ctrl+I / Ctrl+U, active only while the editor has focus
+        for seq, fn in (
+            ("Ctrl+B", self.toggle_bold),
+            ("Ctrl+I", self.toggle_italic),
+            ("Ctrl+U", self.toggle_underline),
+        ):
+            sc = QShortcut(QKeySequence(seq), self.wordView)
+            sc.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            sc.activated.connect(fn)
 
         # self.pbAlignL = QPushButton("Align left", self)
         self.pbAlignL = QPushButton(self)
@@ -165,6 +178,8 @@ class WordController(QWidget):
 
 
         # Initialize.
+        # keep the format buttons in sync as the cursor moves/selections change
+        self.wordView.cursorPositionChanged.connect(self.update_format)
         self.update_format()
         # self.update_title()
         self.show()
@@ -174,63 +189,51 @@ class WordController(QWidget):
         for o in objects:
             o.blockSignals(b)
 
-    def on_clicked_bold(self):
-        self.boldToggled.emit(self.pbBold.isChecked())
+    # --- character formatting (bold / italic / underline) -----------------
+    # Applied through the editor's current char format: acts on the
+    # selection when there is one, otherwise sets the style typed next.
 
-    @Slot(bool)
-    def set_checked_silently(self, checked: bool):
-        """
-        Update the button's visual state WITHOUT re-emitting boldToggled.
-        Needed when the editor's format changes because the cursor moved,
-        not because the user clicked this button.
-        """
-        self.pbBold.blockSignals(True)
-        self.pbBold.setChecked(checked)
-        self.pbBold.blockSignals(False)
-        
-    # def update_format(self):
-    #     """
-    #     Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
-    #     toolbars/etc. in sync with the current edit state.
-    #     :return:
-    #     """
-    #     # Disable signals for all format widgets, so changing values here does not trigger further formatting.
-    #     self.block_signals(self._format_actions, True)
+    def toggle_bold(self):
+        fmt = self.wordView.currentCharFormat()
+        on = not (fmt.fontWeight() >= QFont.Weight.Bold)
+        fmt.setFontWeight(QFont.Weight.Bold if on else QFont.Weight.Normal)
+        self._apply_toggle(self.pbBold, fmt, on)
 
-    #     self.fonts.setCurrentFont(self.editor.currentFont())
-    #     # Nasty, but we get the font-size as a float but want it was an int
-    #     self.fontsize.setCurrentText(str(int(self.editor.fontPointSize())))
+    def toggle_italic(self):
+        fmt = self.wordView.currentCharFormat()
+        on = not fmt.fontItalic()
+        fmt.setFontItalic(on)
+        self._apply_toggle(self.pbItalic, fmt, on)
 
-    #     self.italic_action.setChecked(self.editor.fontItalic())
-    #     self.underline_action.setChecked(self.editor.fontUnderline())
-    #     self.bold_action.setChecked(self.editor.fontWeight() == QFont.Weight.Bold)
+    def toggle_underline(self):
+        fmt = self.wordView.currentCharFormat()
+        on = not fmt.fontUnderline()
+        fmt.setFontUnderline(on)
+        self._apply_toggle(self.pbUnderline, fmt, on)
 
-    #     self.alignl_action.setChecked(
-    #         self.editor.alignment() == Qt.AlignmentFlag.AlignLeft
-    #     )
-    #     self.alignc_action.setChecked(
-    #         self.editor.alignment() == Qt.AlignmentFlag.AlignCenter
-    #     )
-    #     self.alignr_action.setChecked(
-    #         self.editor.alignment() == Qt.AlignmentFlag.AlignRight
-    #     )
-    #     self.alignj_action.setChecked(
-    #         self.editor.alignment() == Qt.AlignmentFlag.AlignJustify
-    #     )
+    def _apply_toggle(self, button, fmt, on):
+        self.wordView.mergeCurrentCharFormat(fmt)
+        button.blockSignals(True)
+        button.setChecked(on)
+        button.blockSignals(False)
 
-    #     self.block_signals(self._format_actions, False)
+    def update_format(self):
+        """Sync the format buttons with the text under the cursor."""
+        fmt = self.wordView.currentCharFormat()
+        for btn, on in (
+            (self.pbBold, fmt.fontWeight() >= QFont.Weight.Bold),
+            (self.pbItalic, fmt.fontItalic()),
+            (self.pbUnderline, fmt.fontUnderline()),
+        ):
+            btn.blockSignals(True)
+            btn.setChecked(on)
+            btn.blockSignals(False)
 
     def dialog_critical(self, s):
         dlg = QMessageBox(self)
         dlg.setText(s)
         dlg.setIcon(QMessageBox.Icon.Critical)
         dlg.show()
-
-
-
-    def update_format(self):
-        return
-
 
     def switchFile(self, fold_in:str, page_index0:int):
         if not fold_in:
