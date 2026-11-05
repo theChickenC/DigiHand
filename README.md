@@ -8,6 +8,7 @@ DigiHand is an innovative handwriting digitization platform that is powerful and
 > DigiHand runs its vision models and LLMs **locally** on your machine to keep your data private and secure.
 
 ---
+Documentation: https://clairc.com/download
 
 The initial output:
 
