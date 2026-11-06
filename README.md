@@ -10,6 +10,7 @@ DigiHand is an innovative handwriting digitization platform that is powerful and
 **Download DigiHand for Windows** — [github.com/theChickenC/DigiHand](https://github.com/theChickenC/DigiHand)
 
 ---
+Documentation: https://clairc.com/download
 
 The initial output:
 
@@ -25,6 +26,7 @@ The initial output:
 - **Auto Save** detects any changes made, allowing for effortless editing.
 - **PDF Viewer** can zoom in, zoom out, fit original, fit to width, rotate, and jump to any page.
 - **Text Editor** can change font, font size, and text alignment; supports bold, italics, and underline.
+- **EPub Generator** generate EPubs with chapters either by "Date XX/XX/XX" or "Chapter: ".
 
 Solver Dialogue:
 
