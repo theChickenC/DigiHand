@@ -4,40 +4,6 @@
 
 DigiHand is an innovative handwriting digitization platform that is powerful and easy to use, converting scanned PDFs of handwriting into digital text. After selecting a model, utilize its intuitive side-by-side editor to adjust raw output.
 
-> [!NOTE]
-> DigiHand runs its vision models and LLMs **locally** on your machine to keep your data private and secure.
-
-**Download DigiHand for Windows** — [github.com/theChickenC/DigiHand](https://github.com/theChickenC/DigiHand)
-
----
-Documentation: https://clairc.com/download
-
-The initial output:
-
-<img src="/images/readme_example.png" alt="converted page example">
-
-
-## Features
-
-- **Solve PDF** by selecting a model in the dropdown and then clicking the lightning bolt.
-- **Set Initial Page** to pick up where you left off solving
-- **Solver Dialogue** provides user on model updates, includes a progress bar.
-- **Synced Scroll** automatically displays the PDF's corresponding output file.
-- **Auto Save** detects any changes made, allowing for effortless editing.
-- **PDF Viewer** can zoom in, zoom out, fit original, fit to width, rotate, and jump to any page.
-- **Text Editor** can change font, font size, and text alignment; supports bold, italics, and underline.
-- **EPub Generator** generate EPubs with chapters either by "Date XX/XX/XX" or "Chapter: ".
-
-Solver Dialogue:
-
-<img src="/images/readme_example_dialogue.png" alt="solver dialogue example">
-
-
-<!-- Edited output: -->
-<!-- <img src="/images/readme_example.png" alt="converted page example"> -->
-
-## Documentation
-
 ### The DigiHand window
 
 - **Toolbars** — *File* (open PDF, save page, projects) and *Tools* (model picker, start page, Solve, ePub).
