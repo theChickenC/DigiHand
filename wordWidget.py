@@ -8,7 +8,7 @@ class WordWidget(QWidget):
         super().__init__(parent)
         # None until a solve run sets it; a hardcoded dev-machine path here
         # would leak old journal data into any new session
-        self.outputPath = None
+        self.outputPath = "D://WelSimLLC-github//DigiHand//output//journalReview//"
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0,0,0,0)

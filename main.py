@@ -699,18 +699,16 @@ class MainWindow(QMainWindow):
         return {}
 
     def export_epub(self):
-        # reopen where the last ePub was exported from; else the current
-        # session's solve output if it has txt files
-        start = self._existing_dir(
-            self.epubFolder,
-            str(self.outputPath) if (self.outputPath
-                                     and any(Path(self.outputPath).glob("*.txt"))) else "",
-            self.openPath)
-        folder = QFileDialog.getExistingDirectory(
-            self, "Choose folder of generated txt files to convert", start)
-        if not folder:
+        # always export from the word widget's current output folder --
+        # no folder picker; that is where the txt files live by definition
+        folder = self.wordWidget.outputPath
+        if not folder or not Path(folder).is_dir():
+            self.dialog_critical(
+                "No output folder yet — run Solve to generate txt files first.")
             return
-        self._remember_dir("epubFolder", folder)
+        if not any(Path(folder).glob("*.txt")):
+            self.dialog_critical(f"No txt files found in {folder}.")
+            return
         defaults = dict(self.epubOptions)
         if not defaults.get("title"):
             defaults["title"] = Path(folder).name
