@@ -3,6 +3,10 @@ from solverBase import SolverBase
 MODEL_ID = "Qwen/Qwen3.5-4B"
 OCR_PROMPT = (
     "Transcribe all the handwritten text in this image exactly as written. "
+    "Include every piece of text on the page, even text that seems unrelated "
+    "to the body: dates, day names, titles, page numbers, headers, and notes "
+    "written in the margins or at the top or bottom of the page. Put the "
+    "date or header line first, at the start. "
     "Do not keep line breaks, put it into paragraph form. "
     "Do not summarize, translate, or correct spelling. "
     "Output only the transcription, nothing else."

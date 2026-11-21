@@ -3,7 +3,11 @@ from solverBase import SolverBase
 MODEL_ID = "Qwen/Qwen2.5-VL-3B-Instruct"
 OCR_PROMPT = (
     "Transcribe all the handwritten text in this image exactly as written, "
-    "preserving line breaks. Do not summarize, translate, or correct spelling. "
+    "preserving line breaks. Include every piece of text on the page, even "
+    "text that seems unrelated to the body: dates, day names, titles, page "
+    "numbers, headers, and notes written in the margins or at the top or "
+    "bottom of the page. "
+    "Do not summarize, translate, or correct spelling. "
     "Output only the transcription, nothing else."
 )
 MIN_PIXELS = 256 * 28 * 28

@@ -33,6 +33,30 @@ class SolverBase(ABC):
 
     # ---- shared helpers -------------------------------------------------
 
+    #: Pre-printed journal-template lines (Datebook-style pages). The date
+    #: itself ("Date 3/14/26") is wanted and kept; the empty printed labels
+    #: around it are not the writer's text.
+    TEMPLATE_LINES = frozenset({
+        "Mo Tu We Th Fr Sa Su",
+        "Memo No.",
+        "Date",
+    })
+
+    @classmethod
+    def strip_template_boilerplate(cls, text: str) -> str:
+        """Drop standalone pre-printed template labels from a transcription.
+
+        Only lines that are EXACTLY a bare label are removed, so a filled
+        line like "Date 3/14/26" survives untouched.
+        """
+        lines = text.splitlines()
+        kept = [ln for ln in lines
+                if ln.strip() not in cls.TEMPLATE_LINES]
+        if len(kept) == len(lines):
+            return text
+        out = "\n".join(kept).strip()
+        return out
+
     def setup_device(self):
         import torch
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -111,6 +135,7 @@ class SolverBase(ABC):
         done = 0
         for page_num, image in self.iter_pages(input_type, folder_in, initPage):
             text = self.recognize_page(image)
+            text = self.strip_template_boilerplate(text)
             self.save_file(page_num, folder_out, text)
             msg = f"Saved page {page_num}.txt"
             log(msg)
