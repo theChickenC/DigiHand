@@ -32,8 +32,11 @@ class SolverQwen3_5(SolverBase):
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         # 4-bit quantization keeps this on an RTX 2070 Super, but
-        # bitsandbytes is an optional dependency: without it, fall back to
-        # fp16 instead of crashing the whole solve.
+        # bitsandbytes is an optional dependency: without it — or when its
+        # wheels do not match the active torch build (e.g. an AMD ROCm torch
+        # with a CUDA-only bitsandbytes) — fall back to fp16 rather than
+        # crash the whole solve. fp16 of this 4B model needs ~9 GB VRAM, so
+        # any modern card (RX 7900 XTX: 24 GB) is fine.
         quantization_config = None
         try:
             import bitsandbytes  # noqa: F401
@@ -48,14 +51,19 @@ class SolverQwen3_5(SolverBase):
             print("WARNING: bitsandbytes not installed; loading Qwen3.5 "
                   "unquantized (needs more VRAM). pip install bitsandbytes for the 4-bit path.")
 
-        load_kwargs = {"device_map": self.device}
+        self.model = None
         if quantization_config is not None:
-            load_kwargs["quantization_config"] = quantization_config
-        else:
-            load_kwargs["dtype"] = self.torch_dtype
-
-        self.model = AutoModelForImageTextToText.from_pretrained(
-            MODEL_ID, **load_kwargs)
+            try:
+                self.model = AutoModelForImageTextToText.from_pretrained(
+                    MODEL_ID, device_map=self.device,
+                    quantization_config=quantization_config)
+            except Exception as exc:
+                print(f"WARNING: 4-bit load failed ({exc}); "
+                      "retrying unquantized (fp16, ~9 GB VRAM).")
+                self.model = None
+        if self.model is None:
+            self.model = AutoModelForImageTextToText.from_pretrained(
+                MODEL_ID, device_map=self.device, dtype=self.torch_dtype)
         self.model.eval()
 
         # Limit image resolution to keep VRAM in check; if this processor

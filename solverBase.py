@@ -20,6 +20,7 @@ class SolverBase(ABC):
         self.model_name = ""
         self.device = None
         self.torch_dtype = None
+        self.backend = None
 
     # ---- provided by concrete solvers ---------------------------------
 
@@ -59,8 +60,18 @@ class SolverBase(ABC):
 
     def setup_device(self):
         import torch
-        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        if torch.cuda.is_available():
+            # ROCm/HIP builds of torch (AMD GPUs) deliberately present
+            # themselves as "cuda"; torch.version.hip is what tells an AMD
+            # GPU apart from an NVIDIA one.
+            self.device = "cuda:0"
+            self.torch_dtype = torch.float16
+            self.backend = (f"ROCm/HIP {torch.version.hip}" if torch.version.hip
+                            else f"CUDA {torch.version.cuda}")
+        else:
+            self.device = "cpu"
+            self.torch_dtype = torch.float32
+            self.backend = "CPU"
 
     @staticmethod
     def image_files(folder_in):
@@ -112,7 +123,8 @@ class SolverBase(ABC):
             on_file_saved=None, on_progress=None):
         log = on_file_saved if on_file_saved else (lambda msg: print(msg))
         self.setup_device()
-        log(f"Using device: {self.device} with dtype: {self.torch_dtype}")
+        log(f"Using device: {self.device} with dtype: {self.torch_dtype} "
+            f"({self.backend})")
 
         if input_type not in (InputType.PDF, InputType.IMAGES):
             return "Not a supported input file(s)."

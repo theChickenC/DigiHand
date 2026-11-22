@@ -113,6 +113,30 @@ DigiHand supports CUDA on Windows and Linux.
 CUDA 13.3 requires an NVIDIA Turing-class or newer GPU and an R610 or newer driver. Check NVIDIA's official [CUDA toolkit, driver, and architecture matrix](https://docs.nvidia.com/datacenter/tesla/drivers/cuda-toolkit-driver-and-architecture-matrix.html) and install the [latest NVIDIA driver](https://www.nvidia.com/en-us/drivers/).
 
 
+### AMD (ROCm)
+
+AMD GPUs are supported through PyTorch's ROCm build, which presents the AMD card as a CUDA device, so no DigiHand settings change is needed — Solve automatically runs on the GPU. The RX 7900 XTX (gfx1100) is officially supported.
+
+On Windows, install a ROCm-enabled PyTorch into your venv with AMD's official wheel index (see [Install PyTorch for ROCm](https://rocm.docs.amd.com/projects/ai-ecosystem/en/latest/frameworks/pytorch/install.html) and pick your GPU/OS/Python version):
+
+```
+python -m pip install --index-url https://stable.repo.amd.com/rocm/whl-next/ ^
+    "torch[device-gfx1100]==2.15.0+rocm10.2.0" ^
+    "torchvision[device-gfx1100]==0.29.2+rocm10.2.0" ^
+    "torchaudio==2.11.1+rocm10.2.0"
+```
+
+Then install the rest of `requirements.txt`. A recent AMD Radeon driver (26.x) is required. Verify with:
+
+```
+python -c "import torch; print(torch.cuda.get_device_name(0))"
+```
+
+which should print `Radeon RX 7900 XTX`. On Linux, use the same index or PyTorch's `rocm` wheel index.
+
+Notes: Qwen3.5 loads unquantized (fp16, ~9 GB) when bitsandbytes 4-bit is unavailable for your ROCm/Python combination — a 24 GB card never needs the 4-bit path. The optional CUDA-only speed kernels (`causal_conv1d`, `flash-linear-attention`) are not available on AMD; DigiHand automatically falls back to reference implementations, which are correct but slower.
+
+
 ### CPU
 
 CPU inference is available for supported workloads but is substantially slower.

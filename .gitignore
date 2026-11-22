@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv*/
+
+# PyInstaller
+build/
+dist/
+build_log.txt
+
+# DigiHand project/workspace data
+output/
