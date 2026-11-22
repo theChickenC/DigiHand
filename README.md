@@ -63,6 +63,14 @@ When the solver finishes, scroll through the PDF and use the synchronized text e
 - Word wrap, Font, Font size, Formatting
 - Bold, Italic, Underline
 
+#### Find & Replace
+
+Press `Ctrl+F` (or **Edit ▸ Find & Replace...**) to open the Find & Replace dialog. It searches across *all* text files of your project, not just the open one:
+
+- **Find** lists every match with its file and line; clicking a result jumps the editor to it.
+- Options: *Match case*, *Whole words*, and *Regular expression* (e.g. find `Date [0-9]` to check which pages captured their date).
+- **Replace All** rewrites every matching occurrence in all files. Each touched file is first saved as a `.bak` backup beside it, so you can undo a replace by restoring the backup.
+
 #### Keyboard shortcuts
 
 | Shortcut | Action |
@@ -70,6 +78,7 @@ When the solver finishes, scroll through the PDF and use the synchronized text e
 | `Ctrl+B` | Bold (in the text editor) |
 | `Ctrl+I` | Italic |
 | `Ctrl+U` | Underline |
+| `Ctrl+F` | Find & Replace (all project text files) |
 | `Ctrl+Shift+N` | New project |
 | `Ctrl+Shift+O` | Open project |
 | `Ctrl+Shift+S` | Save project |
