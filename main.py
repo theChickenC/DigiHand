@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu("&File")
 
         open_file_source_action = QAction(
-            QIcon(os.path.join("images", "open_file_source.jpg")),
+            QIcon(os.path.join(utils.RES_DIR, "images", "open_file_source.jpg")),
             "Open source file...",
             self,
         )
@@ -159,7 +159,7 @@ class MainWindow(QMainWindow):
 
 
         open_file_action = QAction(
-            QIcon(os.path.join("images", "blue-folder-open-document.png")),
+            QIcon(os.path.join(utils.RES_DIR, "images", "blue-folder-open-document.png")),
             "Open file...",
             self,
         )
@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         file_toolbar.addAction(open_file_action)
 
         save_file_action = QAction(
-            QIcon(os.path.join("images", "disk.png")), "Save", self
+            QIcon(os.path.join(utils.RES_DIR, "images", "disk.png")), "Save", self
         )
         save_file_action.setStatusTip("Save current page")
         save_file_action.triggered.connect(self.file_save)
@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
         file_toolbar.addAction(save_file_action)
 
         saveas_file_action = QAction(
-            QIcon(os.path.join("images", "disk--pencil.png")),
+            QIcon(os.path.join(utils.RES_DIR, "images", "disk--pencil.png")),
             "Save As...",
             self,
         )
@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         file_toolbar.addAction(saveas_file_action)
 
         print_action = QAction(
-            QIcon(os.path.join("images", "printer.png")),
+            QIcon(os.path.join(utils.RES_DIR, "images", "printer.png")),
             "Print...",
             self,
         )
@@ -233,13 +233,20 @@ class MainWindow(QMainWindow):
         self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
+        find_replace_action = QAction("Find && Replace...", self)
+        find_replace_action.setStatusTip(
+            "Find and replace text across all output txt files")
+        find_replace_action.setShortcut(QKeySequence("Ctrl+F"))
+        find_replace_action.triggered.connect(self.find_replace)
+        edit_menu.addAction(find_replace_action)
+
 
         tool_toolbar = QToolBar("Tools")
         tool_toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(tool_toolbar)
         tool_menu = self.menuBar().addMenu("&Tools")
 
-        # split_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
+        # split_action = QAction(QIcon(os.path.join(utils.RES_DIR, "images", "digihand_solve.svg")), "Solve", self,)
         # split_action.setStatusTip("Split the PDF")
         # split_action.triggered.connect(self.split_pdf_into_pages)
         # tool_menu.addAction(split_action)
@@ -268,13 +275,13 @@ class MainWindow(QMainWindow):
         self.spInitPage.valueChanged.connect(self.setInitPage)
         self.spInitPage.valueChanged.connect(lambda _v: self._mark_dirty())
 
-        solve_action = QAction(QIcon(os.path.join("images", "digihand_solve.svg")), "Solve", self,)
+        solve_action = QAction(QIcon(os.path.join(utils.RES_DIR, "images", "digihand_solve.svg")), "Solve", self,)
         solve_action.setStatusTip("Convert to text")
         solve_action.triggered.connect(self.solve)
         tool_menu.addAction(solve_action)
         tool_toolbar.addAction(solve_action)
 
-        epub_action = QAction(QIcon(os.path.join("images", "epub_book.svg")), "To ePub", self,)
+        epub_action = QAction(QIcon(os.path.join(utils.RES_DIR, "images", "epub_book.svg")), "To ePub", self,)
         epub_action.setStatusTip("Convert all generated txt files to an ePub (dated files start a new chapter)")
         epub_action.triggered.connect(self.export_epub)
         tool_menu.addAction(epub_action)
@@ -413,21 +420,34 @@ class MainWindow(QMainWindow):
             self,
             "Open file",
             self.openPath,
-            "HTML documents (*.html);Text documents (*.txt);All files (*.*)",
+            "Text documents (*.txt);;HTML documents (*.html)",
         )
 
         if not path:
             return
 
         try:
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
-                text = f.read()
+            raw = Path(path).read_bytes()
+            if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):
+                text = raw.decode("utf-16")  # utf-16 has NULs; check before binary
+            # PDFs, images etc. would decode to replacement-char gibberish
+            # (errors="replace" never raises) -- reject them explicitly.
+            elif b"\x00" in raw[:4096]:
+                raise ValueError(
+                    f"{Path(path).name} is not a text file. "
+                    "PDFs go through 'Open source file'.")
+            else:
+                try:
+                    text = raw.decode("utf-8-sig")
+                except UnicodeDecodeError:
+                    text = raw.decode("cp1252", errors="replace")
 
         except Exception as e:
             self.dialog_critical(str(e))
 
         else:
             self.path = path
+            self.openPath = str(Path(path).parent)
             # Qt will automatically try and guess the format as txt/html
             self.editor.setText(text)
             self.update_title()
@@ -479,6 +499,10 @@ class MainWindow(QMainWindow):
         else:
             self.path = path
             self.update_title()
+
+    def find_replace(self):
+        from dlgFindReplace import DlgFindReplace
+        DlgFindReplace(self).exec()
 
     def file_print(self):
         dlg = QPrintDialog()
@@ -731,6 +755,26 @@ class MainWindow(QMainWindow):
         if not self.pdfPath:
             self.dialog_critical("Open a source PDF first.")
             return
+        # The solvers need the torch/transformers stack. The packaged exe
+        # deliberately does not bundle it (multi-GB), so fail with an
+        # actionable message instead of a crash deep in the worker.
+        import importlib.util
+        if (importlib.util.find_spec("torch") is None
+                or importlib.util.find_spec("transformers") is None):
+            if getattr(sys, "frozen", False):
+                self.dialog_critical(
+                    "Solving is not available in this exe build — it does not "
+                    "include the torch/transformers model stack (several GB).\n\n"
+                    "Run DigiHand from source with: pip install torch "
+                    "transformers qwen-vl-utils accelerate")
+            else:
+                self.dialog_critical(
+                    "The solver needs torch + transformers, which are not "
+                    "installed in this Python environment.\n\nInstall them "
+                    "with:\npip install torch --index-url "
+                    "https://download.pytorch.org/whl/cu128\n"
+                    "pip install transformers qwen-vl-utils accelerate")
+            return
         # let the user name/choose where the page txt files go;
         # cancelling keeps the current (suggested) output folder
         picked = self.choose_output_folder(
@@ -758,6 +802,7 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
     app = QApplication(sys.argv)
     app.setApplicationName("DigiHand v0.1")
+    app.setWindowIcon(QIcon(os.path.join(utils.RES_DIR, "images", "digihand_app.svg")))
 
     window = MainWindow()
     app.exec()

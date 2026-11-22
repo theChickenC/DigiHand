@@ -44,42 +44,42 @@ class PdfController(QWidget):
         self.layout.setSpacing(0)
 
         self.pbZoomIn = QPushButton(self)
-        self.pbZoomIn.setIcon(QIcon(os.path.join("images", "zoom-in.svg")))
+        self.pbZoomIn.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "zoom-in.svg")))
         self.pbZoomIn.setStatusTip("Zoom In PDF")
         self.layout.addWidget(self.pbZoomIn)
 
         self.pbZoomOut = QPushButton(self)
-        self.pbZoomOut.setIcon(QIcon(os.path.join("images", "zoom-out.svg")))
+        self.pbZoomOut.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "zoom-out.svg")))
         self.pbZoomOut.setStatusTip("Zoom Out PDF")
         self.layout.addWidget(self.pbZoomOut)
 
         self.pbZoomFit = QPushButton(self)
-        self.pbZoomFit.setIcon(QIcon(os.path.join("images", "zoom-fit-best.svg")))
+        self.pbZoomFit.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "zoom-fit-best.svg")))
         self.pbZoomFit.setStatusTip("Best Fit PDF Zoom")
         self.layout.addWidget(self.pbZoomFit)
 
         self.pbZoomOG = QPushButton(self)
-        self.pbZoomOG.setIcon(QIcon(os.path.join("images", "zoom-original.svg")))
+        self.pbZoomOG.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "zoom-original.svg")))
         self.pbZoomOG.setStatusTip("Original PDF Zoom")
         self.layout.addWidget(self.pbZoomOG)
 
         self.pbRotateL = QPushButton(self)
-        self.pbRotateL.setIcon(QIcon(os.path.join("images", "rotate-left.svg")))
+        self.pbRotateL.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "rotate-left.svg")))
         self.pbRotateL.setStatusTip("Rotate PDF Left")
         self.layout.addWidget(self.pbRotateL)
 
         self.pbRotateR = QPushButton(self)
-        self.pbRotateR.setIcon(QIcon(os.path.join("images", "rotate-right.svg")))
+        self.pbRotateR.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "rotate-right.svg")))
         self.pbRotateR.setStatusTip("Rotate PDF Right")
         self.layout.addWidget(self.pbRotateR)
 
         self.pbFirstPage = QPushButton(self)
-        self.pbFirstPage.setIcon(QIcon(os.path.join("images", "go-first-view-page.svg")))
+        self.pbFirstPage.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "go-first-view-page.svg")))
         self.pbFirstPage.setStatusTip("First Page")
         self.layout.addWidget(self.pbFirstPage)
 
         self.pbPrevPage = QPushButton(self)
-        self.pbPrevPage.setIcon(QIcon(os.path.join("images", "go-previous-view-page.svg")))
+        self.pbPrevPage.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "go-previous-view-page.svg")))
         self.pbPrevPage.setStatusTip("Previous Page")
         self.layout.addWidget(self.pbPrevPage)
 
@@ -89,12 +89,12 @@ class PdfController(QWidget):
         self.layout.addWidget(self.spCurPage)
 
         self.pbNextPage = QPushButton(self)
-        self.pbNextPage.setIcon(QIcon(os.path.join("images", "go-next-view-page.svg")))
+        self.pbNextPage.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "go-next-view-page.svg")))
         self.pbNextPage.setStatusTip("Next Page")
         self.layout.addWidget(self.pbNextPage)
 
         self.pbLastPage = QPushButton(self)
-        self.pbLastPage.setIcon(QIcon(os.path.join("images", "go-last-view-page.svg")))
+        self.pbLastPage.setIcon(QIcon(os.path.join(utils.RES_DIR, "images", "go-last-view-page.svg")))
         self.pbLastPage.setStatusTip("Last Page")
         self.layout.addWidget(self.pbLastPage)
 
