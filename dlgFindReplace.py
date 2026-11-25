@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
     QMessageBox, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
@@ -273,7 +273,7 @@ class DlgFindReplace(QDialog):
         m = re.fullmatch(r"page_(\d+)\.txt", Path(path).name)
         if m:
             nav = self.main.pdfWidget.pdfView.pageNavigator()
-            nav.jumpToPage(int(m.group(1)))
+            nav.jump(int(m.group(1)), QPointF(0, 0))
         else:
             try:
                 text, _ = read_text(path)
